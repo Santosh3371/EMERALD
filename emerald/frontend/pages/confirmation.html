@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Confirmed — EMERALD</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .confirm-wrap{max-width:620px;margin:5rem auto;padding:0 1.5rem 5rem;text-align:center;position:relative;z-index:1}
+    .confetti-bar{height:5px;background:linear-gradient(90deg,var(--emerald-400),var(--emerald-600),var(--gold),var(--emerald-400));background-size:200%;animation:shimmer 2s linear infinite;border-radius:var(--r-full);margin-bottom:2.5rem}
+    @keyframes shimmer{to{background-position:200% center}}
+    .check-circle{width:88px;height:88px;background:var(--grad-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 2rem;font-size:2.25rem;animation:popIn .5s var(--ease-bounce);box-shadow:0 8px 32px rgba(6,95,70,.2)}
+    @keyframes popIn{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+    .order-card{background:rgba(255,255,255,.82);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.75);border-radius:var(--r-xl);padding:2rem;margin:2.5rem 0;text-align:left;box-shadow:0 4px 24px rgba(0,0,0,.06)}
+    .order-row{display:flex;justify-content:space-between;padding:.7rem 0;border-bottom:1px solid rgba(0,0,0,.05);font-size:.875rem}
+    .order-row:last-child{border-bottom:none}
+    .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin:2rem 0}
+    .step-card{background:rgba(255,255,255,.75);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.7);border-radius:var(--r-lg);padding:1.25rem;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.04)}
+    .step-icon{font-size:1.75rem;margin-bottom:.5rem}
+    .step-card h4{font-size:.82rem;font-weight:700;margin-bottom:.25rem}
+    .step-card p{font-size:.75rem;color:var(--gray-400)}
+    @media(max-width:640px){.steps{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div id="navbar"></div>
+  <div class="confirm-wrap">
+    <div class="confetti-bar"></div>
+    <div class="check-circle">✓</div>
+    <span class="eyebrow" style="display:block;margin-bottom:.75rem">Order Confirmed</span>
+    <h1 style="font-size:2.25rem;margin-bottom:.875rem">Thank You!</h1>
+    <p style="font-size:1.05rem;max-width:440px;margin:0 auto 0">We've received your order and we're getting it ready. Confirmation email on its way.</p>
+    <div class="order-card">
+      <div class="order-row"><span style="color:var(--gray-500)">Order Number</span><strong id="o-num" style="color:var(--emerald-700);font-family:monospace">—</strong></div>
+      <div class="order-row"><span style="color:var(--gray-500)">Date</span><span id="o-date">—</span></div>
+      <div class="order-row"><span style="color:var(--gray-500)">Payment</span><span style="color:var(--emerald-600);font-weight:700">✓ Paid</span></div>
+      <div class="order-row"><span style="color:var(--gray-500)">Total</span><strong id="o-total" style="font-size:1.05rem">—</strong></div>
+      <div class="order-row"><span style="color:var(--gray-500)">Est. Delivery</span><span id="o-delivery">—</span></div>
+    </div>
+    <div class="steps">
+      <div class="step-card"><div class="step-icon">📧</div><h4>Check Email</h4><p>Confirmation incoming</p></div>
+      <div class="step-card"><div class="step-icon">📦</div><h4>Packing Now</h4><p>We start today</p></div>
+      <div class="step-card"><div class="step-icon">🚚</div><h4>Tracking</h4><p>Number sent via email</p></div>
+    </div>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:2.5rem">
+      <a href="account.html" class="btn btn-outline">My Orders</a>
+      <a href="shop.html" class="btn btn-primary">Continue Shopping</a>
+    </div>
+    <div style="background:var(--emerald-50);border-radius:var(--r-xl);padding:1.5rem;border:1px solid var(--emerald-100)">
+      <p style="font-size:.875rem;color:var(--emerald-700);font-weight:600;margin-bottom:.4rem">Share the love ❤️</p>
+      <p style="font-size:.8rem;color:var(--gray-500);margin-bottom:1rem">Tag us @emeraldstyle for a chance to be featured</p>
+      <div style="display:flex;justify-content:center;gap:.75rem">
+        <a href="https://instagram.com" target="_blank" class="btn btn-sm" style="background:#E1306C;color:white;border-radius:var(--r-full)">Instagram</a>
+        <a href="https://tiktok.com" target="_blank" class="btn btn-sm" style="background:#000;color:white;border-radius:var(--r-full)">TikTok</a>
+        <a href="https://pinterest.com" target="_blank" class="btn btn-sm" style="background:#E60023;color:white;border-radius:var(--r-full)">Pinterest</a>
+      </div>
+    </div>
+  </div>
+  <div id="footer"></div>
+  <script src="../js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded',()=>{
+      const p = new URLSearchParams(window.location.search);
+      document.getElementById('o-num').textContent = p.get('order')||'EM-XXXXXXXX';
+      document.getElementById('o-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+      if(p.get('total')) document.getElementById('o-total').textContent = formatPrice(p.get('total'));
+      const d=new Date(); d.setDate(d.getDate()+7);
+      document.getElementById('o-delivery').textContent = d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+    });
+  </script>
+</body>
+</html>

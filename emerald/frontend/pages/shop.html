@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shop — EMERALD</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .shop-layout { display: grid; grid-template-columns: 260px 1fr; gap: 2rem; padding: 3rem 0 5rem; position: relative; z-index: 1; }
+    /* sidebar */
+    .filters-sidebar { position: sticky; top: 80px; background: rgba(255,255,255,0.78); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.7); border-radius: var(--r-xl); padding: 1.75rem; box-shadow: 0 4px 24px rgba(0,0,0,0.05); }
+    .filter-group { margin-bottom: 1.75rem; }
+    .filter-title { font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .14em; color: var(--gray-700); margin-bottom: .875rem; padding-bottom: .625rem; border-bottom: 1px solid var(--gray-200); }
+    .filter-option { display: flex; align-items: center; gap: .625rem; padding: .3rem 0; cursor: pointer; }
+    .filter-option input { accent-color: var(--emerald-600); width: 15px; height: 15px; }
+    .filter-option label { font-size: .875rem; cursor: pointer; color: var(--gray-600); transition: color .2s; }
+    .filter-option label:hover { color: var(--emerald-700); }
+    .price-inputs { display: flex; gap: .625rem; align-items: center; }
+    .price-inputs input { width: 85px; padding: .5rem .75rem; border: 1.5px solid var(--gray-200); border-radius: var(--r-md); font-size: .82rem; background: rgba(255,255,255,.8); outline: none; }
+    .price-inputs input:focus { border-color: var(--emerald-500); }
+    .size-opts { display: flex; flex-wrap: wrap; gap: .4rem; }
+    .size-opt-btn { padding: .35rem .7rem; border: 1.5px solid var(--gray-200); border-radius: var(--r-md); font-size: .78rem; cursor: pointer; background: white; transition: all .2s; }
+    .size-opt-btn.active { background: var(--emerald-700); color: white; border-color: var(--emerald-700); }
+    .btn-clear { font-size: .78rem; color: var(--emerald-600); background: none; border: none; cursor: pointer; text-decoration: underline; }
+    /* topbar */
+    .shop-topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem; }
+    .search-wrap { display: flex; align-items: center; gap: .625rem; background: rgba(255,255,255,.8); backdrop-filter: blur(12px); border: 1.5px solid rgba(255,255,255,.7); border-radius: var(--r-full); padding: .6rem 1.1rem; flex: 1; max-width: 320px; }
+    .search-wrap input { border: none; background: none; outline: none; font-size: .875rem; width: 100%; }
+    .sort-sel { padding: .6rem 1rem; border: 1.5px solid var(--gray-200); border-radius: var(--r-full); font-size: .82rem; background: rgba(255,255,255,.8); backdrop-filter: blur(8px); outline: none; cursor: pointer; }
+    .sort-sel:focus { border-color: var(--emerald-500); }
+    .product-count { font-size: .82rem; color: var(--gray-500); }
+    /* pagination */
+    .pagination { display: flex; gap: .5rem; justify-content: center; margin-top: 3rem; }
+    .page-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: 1.5px solid var(--gray-200); border-radius: var(--r-full); font-size: .85rem; cursor: pointer; transition: all .2s; background: rgba(255,255,255,.8); }
+    .page-btn:hover, .page-btn.active { background: var(--emerald-700); color: white; border-color: var(--emerald-700); }
+    .filter-toggle { display: none; align-items: center; gap: .5rem; padding: .6rem 1.1rem; border: 1.5px solid var(--gray-200); border-radius: var(--r-full); font-size: .85rem; background: rgba(255,255,255,.8); backdrop-filter: blur(8px); cursor: pointer; }
+    @media(max-width:1024px) { .shop-layout { grid-template-columns: 1fr; } .filters-sidebar { position: static; display: none; } .filters-sidebar.open { display: block; } .filter-toggle { display: flex; } }
+    @media(max-width:768px) { .grid-3 { grid-template-columns: repeat(2,1fr); } }
+  </style>
+</head>
+<body>
+  <div id="navbar"></div>
+  <div class="page-header">
+    <div class="container"><h1>The Collection</h1><p>Discover every piece in the EMERALD universe</p></div>
+  </div>
+  <div class="container">
+    <div class="shop-layout">
+      <aside>
+        <button class="filter-toggle" onclick="document.querySelector('.filters-sidebar').classList.toggle('open')">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="12" y1="18" x2="20" y2="18"/></svg>
+          Filters
+        </button>
+        <div class="filters-sidebar">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+            <span style="font-weight:700;font-size:1rem">Filters</span>
+            <button class="btn-clear" onclick="clearAll()">Clear all</button>
+          </div>
+          <div class="filter-group">
+            <div class="filter-title">Category</div>
+            <div class="filter-option"><input type="radio" name="cat" id="c-all" value="" checked onchange="applyFilters()"><label for="c-all">All</label></div>
+            <div class="filter-option"><input type="radio" name="cat" id="c-women" value="women" onchange="applyFilters()"><label for="c-women">Women</label></div>
+            <div class="filter-option"><input type="radio" name="cat" id="c-men" value="men" onchange="applyFilters()"><label for="c-men">Men</label></div>
+            <div class="filter-option"><input type="radio" name="cat" id="c-accessories" value="accessories" onchange="applyFilters()"><label for="c-accessories">Accessories</label></div>
+            <div class="filter-option"><input type="radio" name="cat" id="c-footwear" value="footwear" onchange="applyFilters()"><label for="c-footwear">Footwear</label></div>
+            <div class="filter-option"><input type="radio" name="cat" id="c-bags" value="bags" onchange="applyFilters()"><label for="c-bags">Bags</label></div>
+            <div class="filter-option"><input type="radio" name="cat" id="c-jewelry" value="jewelry" onchange="applyFilters()"><label for="c-jewelry">Jewelry</label></div>
+          </div>
+          <div class="filter-group">
+            <div class="filter-title">Price Range</div>
+            <div class="price-inputs">
+              <input type="number" id="minP" placeholder="Min $" onchange="applyFilters()">
+              <span style="color:var(--gray-400)">—</span>
+              <input type="number" id="maxP" placeholder="Max $" onchange="applyFilters()">
+            </div>
+          </div>
+          <div class="filter-group">
+            <div class="filter-title">Size</div>
+            <div class="size-opts">
+              <button class="size-opt-btn" onclick="toggleSize(this,'XS')">XS</button>
+              <button class="size-opt-btn" onclick="toggleSize(this,'S')">S</button>
+              <button class="size-opt-btn" onclick="toggleSize(this,'M')">M</button>
+              <button class="size-opt-btn" onclick="toggleSize(this,'L')">L</button>
+              <button class="size-opt-btn" onclick="toggleSize(this,'XL')">XL</button>
+              <button class="size-opt-btn" onclick="toggleSize(this,'XXL')">XXL</button>
+            </div>
+          </div>
+          <div class="filter-group">
+            <div class="filter-title">Special</div>
+            <div class="filter-option"><input type="checkbox" id="f-new" onchange="applyFilters()"><label for="f-new">New Arrivals</label></div>
+            <div class="filter-option"><input type="checkbox" id="f-sale" onchange="applyFilters()"><label for="f-sale">On Sale</label></div>
+            <div class="filter-option"><input type="checkbox" id="f-feat" onchange="applyFilters()"><label for="f-feat">Featured</label></div>
+          </div>
+        </div>
+      </aside>
+      <div>
+        <div class="shop-topbar">
+          <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+            <div class="search-wrap">
+              <svg width="14" height="14" fill="none" stroke="var(--gray-400)" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="search-inp" placeholder="Search products…" oninput="debSearch()">
+            </div>
+            <span class="product-count" id="prod-count"></span>
+          </div>
+          <select class="sort-sel" id="sort-sel" onchange="applyFilters()">
+            <option value="newest">Newest First</option>
+            <option value="price-asc">Price: Low → High</option>
+            <option value="price-desc">Price: High → Low</option>
+            <option value="rating">Top Rated</option>
+          </select>
+        </div>
+        <div class="grid-4" id="products-grid" style="min-height:300px">
+          <div class="loading-container" style="grid-column:1/-1"><div class="spinner"></div></div>
+        </div>
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </div>
+  </div>
+  <div id="footer"></div>
+  <div id="toast-container"></div>
+  <script src="../js/main.js"></script>
+  <script>
+    let page = 1, selSize = '', timer;
+    async function load() {
+      const grid = document.getElementById('products-grid');
+      grid.innerHTML = '<div class="loading-container" style="grid-column:1/-1"><div class="spinner"></div></div>';
+      const cat = document.querySelector('input[name="cat"]:checked')?.value || '';
+      const min = document.getElementById('minP').value;
+      const max = document.getElementById('maxP').value;
+      const sort = document.getElementById('sort-sel').value;
+      const search = document.getElementById('search-inp').value;
+      const isNew = document.getElementById('f-new').checked;
+      const isSale = document.getElementById('f-sale').checked;
+      const isFeat = document.getElementById('f-feat').checked;
+      const params = new URLSearchParams({ sort, limit: 9, page });
+      if (cat) params.set('category', cat);
+      if (min) params.set('minPrice', min);
+      if (max) params.set('maxPrice', max);
+      if (selSize) params.set('size', selSize);
+      if (search) params.set('search', search);
+      if (isNew) params.set('newArrival', true);
+      if (isSale) params.set('onSale', true);
+      if (isFeat) params.set('featured', true);
+      try {
+        const data = await apiFetch(`/products?${params}`);
+        document.getElementById('prod-count').textContent = `${data.total} items`;
+        grid.innerHTML = data.products.length
+          ? data.products.map(buildProductCard).join('')
+          : '<p style="grid-column:1/-1;text-align:center;padding:4rem;color:var(--gray-400)">No products match your filters.</p>';
+        renderPagination(data.pages);
+        initReveal();
+      } catch(err) {
+        grid.innerHTML = `<p style="grid-column:1/-1;text-align:center;padding:4rem;color:var(--gray-400)">${err.message}</p>`;
+      }
+    }
+    function applyFilters() { page = 1; load(); }
+    function debSearch() { clearTimeout(timer); timer = setTimeout(applyFilters, 380); }
+    function toggleSize(btn, s) {
+      document.querySelectorAll('.size-opt-btn').forEach(b => b.classList.remove('active'));
+      if (selSize === s) { selSize = ''; } else { selSize = s; btn.classList.add('active'); }
+      applyFilters();
+    }
+    function clearAll() {
+      document.getElementById('c-all').checked = true;
+      document.getElementById('minP').value = '';
+      document.getElementById('maxP').value = '';
+      document.getElementById('f-new').checked = false;
+      document.getElementById('f-sale').checked = false;
+      document.getElementById('f-feat').checked = false;
+      document.getElementById('search-inp').value = '';
+      document.querySelectorAll('.size-opt-btn').forEach(b => b.classList.remove('active'));
+      selSize = ''; page = 1; load();
+    }
+    function renderPagination(total) {
+      const el = document.getElementById('pagination');
+      if (total <= 1) { el.innerHTML = ''; return; }
+      el.innerHTML = Array.from({length:total},(_,i)=>`<button class="page-btn ${i+1===page?'active':''}" onclick="goto(${i+1})">${i+1}</button>`).join('');
+    }
+    function goto(p) { page = p; load(); window.scrollTo({top:200,behavior:'smooth'}); }
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const cat = params.get('category');
+      if (cat) { const el = document.getElementById(`c-${cat}`); if(el) el.checked = true; }
+      load();
+    });
+  </script>
+</body>
+</html>

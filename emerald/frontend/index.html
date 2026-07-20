@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="EMERALD — Premium fashion for the modern individual.">
+  <title>EMERALD — Premium Fashion Store</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* ══ HERO ══════════════════════════════════════════ */
+    .hero {
+      min-height: 100vh; position: relative; overflow: hidden;
+      display: flex; align-items: center;
+    }
+    .hero-bg {
+      position: absolute; inset: 0; z-index: 0;
+    }
+    .hero-bg img {
+      width: 100%; height: 100%; object-fit: cover; object-position: center top;
+      filter: brightness(0.45) saturate(0.8);
+    }
+    .hero-bg::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(105deg, rgba(2,44,34,0.92) 0%, rgba(6,79,59,0.7) 45%, rgba(6,95,70,0.2) 100%);
+    }
+    /* mesh orbs over hero */
+    .hero-orb {
+      position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none; z-index: 1;
+    }
+    .hero-orb-1 { width: 500px; height: 500px; background: rgba(16,185,129,0.12); top: -100px; right: 10%; }
+    .hero-orb-2 { width: 300px; height: 300px; background: rgba(202,138,4,0.08); bottom: 10%; right: 30%; }
+
+    .hero-content {
+      position: relative; z-index: 2;
+      max-width: var(--max-w); margin: 0 auto; padding: 8rem 1.5rem 6rem;
+      width: 100%;
+    }
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: 0.75rem;
+      padding: 0.45rem 1.1rem;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: var(--r-full);
+      font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--emerald-300); margin-bottom: 2rem;
+    }
+    .hero-tag span { width: 6px; height: 6px; border-radius: 50%; background: var(--emerald-400); display: inline-block; animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+
+    .hero h1 {
+      color: white; font-size: clamp(3.2rem, 7vw, 6.5rem);
+      line-height: 1.0; font-weight: 700; max-width: 700px;
+      margin-bottom: 1.75rem;
+    }
+    .hero h1 em {
+      font-style: italic; display: block;
+      background: linear-gradient(135deg, var(--emerald-300) 0%, var(--emerald-400) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero-sub {
+      color: rgba(255,255,255,0.65); font-size: 1.1rem;
+      max-width: 480px; margin-bottom: 3rem; line-height: 1.8;
+    }
+    .hero-cta { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
+
+    /* floating stats cards */
+    .hero-stats {
+      display: flex; gap: 1.25rem; margin-top: 4rem; flex-wrap: wrap;
+    }
+    .hero-stat {
+      padding: 1rem 1.5rem;
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: var(--r-lg);
+      text-align: center; min-width: 110px;
+    }
+    .hero-stat-num { font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; color: white; line-height: 1; }
+    .hero-stat-label { font-size: 0.68rem; color: rgba(255,255,255,0.5); margin-top: 0.3rem; text-transform: uppercase; letter-spacing: 0.08em; }
+
+    /* scroll indicator */
+    .hero-scroll {
+      position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 0.5rem; z-index: 2;
+    }
+    .scroll-pill {
+      width: 24px; height: 38px; border: 1.5px solid rgba(255,255,255,0.3);
+      border-radius: var(--r-full); display: flex; justify-content: center; padding-top: 6px;
+    }
+    .scroll-dot { width: 4px; height: 8px; background: var(--emerald-400); border-radius: var(--r-full); animation: scrollDot 1.8s ease-in-out infinite; }
+    @keyframes scrollDot { 0%{opacity:1;transform:translateY(0)} 100%{opacity:0;transform:translateY(12px)} }
+
+    /* ══ MARQUEE ══════════════════════════════════════ */
+    .marquee-section { background: var(--emerald-800); padding: .875rem 0; overflow: hidden; white-space: nowrap; }
+    .marquee-track { display: inline-flex; gap: 3rem; animation: marquee 25s linear infinite; }
+    .marquee-item { color: rgba(255,255,255,.85); font-size: .72rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; display: flex; align-items: center; gap: 1.5rem; }
+    .marquee-item::after { content: '✦'; color: var(--emerald-300); font-size: .55rem; }
+    @keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+    /* ══ FLOATING CATEGORIES ══════════════════════════ */
+    .categories-section { padding: 5rem 0; background: transparent; }
+    .cat-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-template-rows: 220px 220px;
+      gap: 1rem;
+    }
+    .cat-card {
+      position: relative; overflow: hidden; border-radius: var(--r-xl);
+      cursor: pointer; transition: all 0.4s var(--ease);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    }
+    .cat-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: 0 20px 60px rgba(0,0,0,0.18); }
+    .cat-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s var(--ease); }
+    .cat-card:hover img { transform: scale(1.08); }
+    .cat-card-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, transparent 40%, rgba(2,44,34,0.88) 100%);
+      display: flex; align-items: flex-end; padding: 1.5rem;
+    }
+    .cat-card-label { color: white; font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; }
+    .cat-card-label span { display: block; font-family: var(--font-body); font-size: 0.72rem; font-weight: 400; opacity: .65; margin-top: .2rem; }
+    /* Glass badge on cat cards */
+    .cat-glass-badge {
+      position: absolute; top: 1rem; right: 1rem;
+      padding: .3rem .7rem;
+      background: rgba(255,255,255,0.15); backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,.2); border-radius: var(--r-full);
+      font-size: .65rem; font-weight: 700; color: white; text-transform: uppercase; letter-spacing: .08em;
+    }
+    /* grid placement */
+    .cat-women     { grid-column: 1/6;  grid-row: 1/3; }
+    .cat-men       { grid-column: 6/9;  grid-row: 1/2; }
+    .cat-footwear  { grid-column: 9/13; grid-row: 1/2; }
+    .cat-bags      { grid-column: 6/9;  grid-row: 2/3; }
+    .cat-jewelry   { grid-column: 9/13; grid-row: 2/3; }
+
+    /* ══ PRODUCTS SECTION ════════════════════════════ */
+    .products-section { padding: 5rem 0; }
+    .products-bg {
+      background: linear-gradient(180deg, #f0faf5 0%, #f8faf9 100%);
+      position: relative;
+    }
+    .products-bg::before {
+      content: '';
+      position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 800px; height: 400px;
+      background: radial-gradient(ellipse, rgba(16,185,129,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* ══ BENEFITS FLOATING ════════════════════════════ */
+    .benefits-section { padding: 4rem 0; }
+    .benefits-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 1.25rem; }
+    .benefit-card {
+      padding: 2rem 1.5rem; border-radius: var(--r-xl);
+      background: rgba(255,255,255,0.72);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.7);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.05);
+      text-align: center; transition: all 0.35s var(--ease);
+    }
+    .benefit-card:hover { transform: translateY(-6px); box-shadow: 0 16px 48px rgba(6,95,70,0.1); }
+    .benefit-icon-wrap {
+      width: 56px; height: 56px; border-radius: var(--r-full);
+      background: var(--grad-light); display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; margin: 0 auto 1.1rem;
+    }
+    .benefit-card h4 { font-size: .95rem; font-weight: 700; color: var(--gray-900); margin-bottom: .35rem; }
+    .benefit-card p  { font-size: .82rem; color: var(--gray-500); line-height: 1.6; }
+
+    /* ══ TESTIMONIALS ════════════════════════════════ */
+    .testimonials-section { padding: 5rem 0; background: linear-gradient(180deg, #f8faf9 0%, #edf7f2 100%); }
+    .testimonial-card {
+      padding: 2rem; border-radius: var(--r-xl);
+      background: rgba(255,255,255,0.8);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.8);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+      transition: all 0.35s var(--ease);
+    }
+    .testimonial-card:hover { transform: translateY(-6px); box-shadow: 0 20px 60px rgba(6,95,70,0.1); }
+    .t-quote { font-family: var(--font-display); font-style: italic; font-size: 1.05rem; color: var(--gray-800); line-height: 1.75; margin-bottom: 1.5rem; }
+    .t-author { display: flex; align-items: center; gap: .875rem; }
+    .t-avatar { width: 42px; height: 42px; border-radius: 50%; background: var(--grad-hero); color: white; font-weight: 700; font-size: 1rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .t-name { font-weight: 700; font-size: .875rem; color: var(--gray-900); }
+    .t-loc  { font-size: .75rem; color: var(--gray-400); }
+
+    /* ══ NEWSLETTER ══════════════════════════════════ */
+    .newsletter-section {
+      padding: 6rem 0; position: relative; overflow: hidden;
+      background: var(--grad-hero);
+    }
+    .newsletter-section::before {
+      content: ''; position: absolute; inset: 0;
+      background: var(--grad-mesh); pointer-events: none;
+    }
+    .newsletter-section::after {
+      content: 'EMERALD';
+      position: absolute; font-family: var(--font-display);
+      font-size: 16vw; font-weight: 700; opacity: .03;
+      color: white; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      white-space: nowrap; pointer-events: none;
+    }
+    .newsletter-inner { position: relative; z-index: 2; text-align: center; }
+    .newsletter-glass {
+      max-width: 580px; margin: 0 auto;
+      background: rgba(255,255,255,0.08); backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.16); border-radius: var(--r-xl);
+      padding: 3rem 2.5rem;
+    }
+    .newsletter-glass h2 { color: white; margin-bottom: .75rem; }
+    .newsletter-glass p  { color: rgba(255,255,255,.65); margin-bottom: 2rem; }
+    .nl-form { display: flex; gap: .625rem; }
+    .nl-form input {
+      flex: 1; padding: .9rem 1.25rem;
+      background: rgba(255,255,255,0.12); backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: var(--r-full); color: white; font-size: .9rem; outline: none;
+      transition: border-color .2s;
+    }
+    .nl-form input::placeholder { color: rgba(255,255,255,.5); }
+    .nl-form input:focus { border-color: rgba(255,255,255,.5); }
+    .nl-note { font-size: .72rem; color: rgba(255,255,255,.4); margin-top: .875rem; }
+
+    /* ══ INSTAGRAM STRIP ════════════════════════════ */
+    .insta-section { padding: 4rem 0; }
+    .insta-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: .625rem; border-radius: var(--r-xl); overflow: hidden; }
+    .insta-item { aspect-ratio: 1; overflow: hidden; position: relative; }
+    .insta-item img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s var(--ease); }
+    .insta-item:hover img { transform: scale(1.1); }
+    .insta-item::after {
+      content: '♡'; position: absolute; inset: 0;
+      background: rgba(6,79,59,0.55); color: white; font-size: 1.5rem;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity .3s; backdrop-filter: blur(4px);
+    }
+    .insta-item:hover::after { opacity: 1; }
+
+    /* ══ RESPONSIVE ══════════════════════════════════ */
+    @media(max-width:1200px) {
+      .cat-grid { grid-template-columns: repeat(2,1fr); grid-template-rows: auto; }
+      .cat-women,.cat-men,.cat-footwear,.cat-bags,.cat-jewelry { grid-column: auto; grid-row: auto; }
+      .cat-women { grid-column: 1/3; }
+    }
+    @media(max-width:1024px) { .benefits-row { grid-template-columns: repeat(2,1fr); } }
+    @media(max-width:768px) {
+      .hero h1 { font-size: clamp(2.5rem,10vw,4rem); }
+      .hero-stats { gap: .75rem; }
+      .hero-stat { min-width: 80px; padding: .75rem 1rem; }
+      .cat-grid { grid-template-columns: 1fr 1fr; grid-template-rows: auto; }
+      .cat-women { grid-column: 1/3; }
+      .benefits-row { grid-template-columns: 1fr 1fr; }
+      .insta-grid { grid-template-columns: repeat(3,1fr); }
+      .nl-form { flex-direction: column; }
+    }
+    @media(max-width:480px) { .hero-stats { display: none; } }
+  </style>
+</head>
+<body>
+  <div id="navbar"></div>
+
+  <!-- ══ HERO ══════════════════════════════════════════ -->
+  <section class="hero">
+    <div class="hero-bg">
+      <!-- Old money men's style: tailored suit, refined, editorial -->
+      <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1400&q=85&fit=crop&crop=top"
+           alt="EMERALD — Old Money Fashion" fetchpriority="high">
+    </div>
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+
+    <div class="hero-content">
+      <div class="hero-tag animate-fadeUp">
+        <span></span> New Collection 2024
+      </div>
+      <h1 class="animate-fadeUp" style="animation-delay:.1s">
+        Dress for the<br><em>Life You Want</em>
+      </h1>
+      <p class="hero-sub animate-fadeUp" style="animation-delay:.2s">
+        Curated old-money aesthetics for those who understand that true luxury is timeless — not trending.
+      </p>
+      <div class="hero-cta animate-fadeUp" style="animation-delay:.3s">
+        <a href="pages/shop.html" class="btn btn-primary btn-lg">Shop Collection</a>
+        <a href="pages/about.html" class="btn btn-glass btn-lg">Our Story</a>
+      </div>
+      <div class="hero-stats animate-fadeUp" style="animation-delay:.45s">
+        <div class="hero-stat"><div class="hero-stat-num">50K+</div><div class="hero-stat-label">Customers</div></div>
+        <div class="hero-stat"><div class="hero-stat-num">4.9★</div><div class="hero-stat-label">Avg Rating</div></div>
+        <div class="hero-stat"><div class="hero-stat-num">35+</div><div class="hero-stat-label">Countries</div></div>
+        <div class="hero-stat"><div class="hero-stat-num">120+</div><div class="hero-stat-label">Styles</div></div>
+      </div>
+    </div>
+
+    <div class="hero-scroll">
+      <div class="scroll-pill"><div class="scroll-dot"></div></div>
+    </div>
+  </section>
+
+  <!-- ══ MARQUEE ════════════════════════════════════════ -->
+  <div class="marquee-section" aria-hidden="true">
+    <div class="marquee-track">
+      <span class="marquee-item">Free shipping over $100</span>
+      <span class="marquee-item">New Arrivals Weekly</span>
+      <span class="marquee-item">Sustainable Luxury Fashion</span>
+      <span class="marquee-item">Easy 30-Day Returns</span>
+      <span class="marquee-item">Old Money Aesthetics</span>
+      <span class="marquee-item">Members Get 15% Off</span>
+      <span class="marquee-item">Free shipping over $100</span>
+      <span class="marquee-item">New Arrivals Weekly</span>
+      <span class="marquee-item">Sustainable Luxury Fashion</span>
+      <span class="marquee-item">Easy 30-Day Returns</span>
+      <span class="marquee-item">Old Money Aesthetics</span>
+      <span class="marquee-item">Members Get 15% Off</span>
+    </div>
+  </div>
+
+  <!-- ══ CATEGORIES ══════════════════════════════════════ -->
+  <section class="categories-section">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="eyebrow">Browse By</span>
+        <h2>Shop the Collection</h2>
+      </div>
+      <div class="cat-grid">
+        <a href="pages/shop.html?category=women" class="cat-card cat-women reveal">
+          <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?w=700&q=80" alt="Women" loading="lazy">
+          <div class="cat-card-overlay"><div class="cat-card-label">Women <span>View Collection →</span></div></div>
+          <div class="cat-glass-badge">New In</div>
+        </a>
+        <a href="pages/shop.html?category=men" class="cat-card cat-men reveal delay-1">
+          <img src="https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?w=500&q=80" alt="Men" loading="lazy">
+          <div class="cat-card-overlay"><div class="cat-card-label">Men <span>View Collection →</span></div></div>
+        </a>
+        <a href="pages/shop.html?category=footwear" class="cat-card cat-footwear reveal delay-2">
+          <img src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=500&q=80" alt="Footwear" loading="lazy">
+          <div class="cat-card-overlay"><div class="cat-card-label">Footwear <span>View Collection →</span></div></div>
+        </a>
+        <a href="pages/shop.html?category=bags" class="cat-card cat-bags reveal delay-1">
+          <img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=500&q=80" alt="Bags" loading="lazy">
+          <div class="cat-card-overlay"><div class="cat-card-label">Bags <span>View Collection →</span></div></div>
+          <div class="cat-glass-badge">Bestseller</div>
+        </a>
+        <a href="pages/shop.html?category=jewelry" class="cat-card cat-jewelry reveal delay-2">
+          <img src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=500&q=80" alt="Jewelry" loading="lazy">
+          <div class="cat-card-overlay"><div class="cat-card-label">Jewelry <span>View Collection →</span></div></div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ FEATURED PRODUCTS ═══════════════════════════════ -->
+  <section class="products-section products-bg">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="eyebrow">Hand-Picked</span>
+        <h2>Featured Pieces</h2>
+        <p>Curated selections from our latest collection — each piece chosen for exceptional quality and enduring style.</p>
+      </div>
+      <div class="grid-4" id="featured-products">
+        <div class="loading-container" style="grid-column:1/-1"><div class="spinner"></div></div>
+      </div>
+      <div class="text-center mt-4 reveal">
+        <a href="pages/shop.html" class="btn btn-outline btn-lg">View All Products</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ BENEFITS ════════════════════════════════════════ -->
+  <section class="benefits-section">
+    <div class="container">
+      <div class="benefits-row">
+        <div class="benefit-card reveal">
+          <div class="benefit-icon-wrap">🚚</div>
+          <h4>Free Shipping</h4>
+          <p>On all orders over $100. Fast, tracked, reliable.</p>
+        </div>
+        <div class="benefit-card reveal delay-1">
+          <div class="benefit-icon-wrap">↩️</div>
+          <h4>Easy Returns</h4>
+          <p>30-day hassle-free returns. No questions asked.</p>
+        </div>
+        <div class="benefit-card reveal delay-2">
+          <div class="benefit-icon-wrap">🔒</div>
+          <h4>Secure Payment</h4>
+          <p>Stripe-powered. SSL encrypted. Always safe.</p>
+        </div>
+        <div class="benefit-card reveal delay-3">
+          <div class="benefit-icon-wrap">💎</div>
+          <h4>Premium Quality</h4>
+          <p>Sustainably sourced. Crafted to last seasons.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ NEW ARRIVALS ════════════════════════════════════ -->
+  <section class="products-section" style="background:white;padding-top:3rem">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="eyebrow">Just Dropped</span>
+        <h2>New Arrivals</h2>
+        <p>Fresh pieces added to the collection this week.</p>
+      </div>
+      <div class="grid-4" id="new-arrivals">
+        <div class="loading-container" style="grid-column:1/-1"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ TESTIMONIALS ════════════════════════════════════ -->
+  <section class="testimonials-section">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="eyebrow">Customer Love</span>
+        <h2>Worn & Adored</h2>
+      </div>
+      <div class="grid-3">
+        <div class="testimonial-card reveal">
+          <div class="stars" style="margin-bottom:1.1rem;font-size:1rem">★★★★★</div>
+          <p class="t-quote">"The silk evening gown exceeded all expectations. The quality is outstanding and the emerald colour is breathtaking."</p>
+          <div class="t-author">
+            <div class="t-avatar">S</div>
+            <div><div class="t-name">Sophia Chen</div><div class="t-loc">New York, USA</div></div>
+          </div>
+        </div>
+        <div class="testimonial-card reveal delay-1">
+          <div class="stars" style="margin-bottom:1.1rem;font-size:1rem">★★★★★</div>
+          <p class="t-quote">"I've never experienced fashion this elevated. The cashmere cardigan is worth every penny — pure old-money luxury."</p>
+          <div class="t-author">
+            <div class="t-avatar">A</div>
+            <div><div class="t-name">Amara Osei</div><div class="t-loc">London, UK</div></div>
+          </div>
+        </div>
+        <div class="testimonial-card reveal delay-2">
+          <div class="stars" style="margin-bottom:1.1rem;font-size:1rem">★★★★★</div>
+          <p class="t-quote">"The leather tote is perfect for the office. I get compliments every day. Shipping was incredibly fast too."</p>
+          <div class="t-author">
+            <div class="t-avatar">L</div>
+            <div><div class="t-name">Léa Martin</div><div class="t-loc">Paris, France</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ NEWSLETTER ══════════════════════════════════════ -->
+  <section class="newsletter-section">
+    <div class="newsletter-inner container">
+      <div class="newsletter-glass reveal">
+        <span class="eyebrow" style="color:var(--emerald-300);margin-bottom:.75rem;display:block">Stay in the Loop</span>
+        <h2>Get 15% Off Your First Order</h2>
+        <p>Join the EMERALD inner circle. New arrivals, exclusive offers, and style inspiration in your inbox.</p>
+        <form id="home-newsletter" onsubmit="submitNewsletter(event)">
+          <div class="nl-form">
+            <input type="email" placeholder="Enter your email address" required autocomplete="email">
+            <button type="submit" class="btn btn-gold">Subscribe</button>
+          </div>
+          <p class="nl-note">No spam, ever. Unsubscribe anytime. By subscribing you agree to our Privacy Policy.</p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ INSTAGRAM ══════════════════════════════════════ -->
+  <section class="insta-section">
+    <div class="container">
+      <div class="section-header reveal" style="margin-bottom:1.75rem">
+        <span class="eyebrow">Follow Us</span>
+        <h3>@emeraldstyle</h3>
+      </div>
+      <div class="insta-grid">
+        <a href="https://instagram.com" target="_blank" class="insta-item reveal"><img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=300&q=60" alt="Instagram" loading="lazy"></a>
+        <a href="https://instagram.com" target="_blank" class="insta-item reveal delay-1"><img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=300&q=60" alt="Instagram" loading="lazy"></a>
+        <a href="https://instagram.com" target="_blank" class="insta-item reveal delay-2"><img src="https://images.unsplash.com/photo-1509631179647-0177331693ae?w=300&q=60" alt="Instagram" loading="lazy"></a>
+        <a href="https://instagram.com" target="_blank" class="insta-item reveal delay-1"><img src="https://images.unsplash.com/photo-1551803091-e20673f15770?w=300&q=60" alt="Instagram" loading="lazy"></a>
+        <a href="https://instagram.com" target="_blank" class="insta-item reveal delay-2"><img src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=300&q=60" alt="Instagram" loading="lazy"></a>
+        <a href="https://instagram.com" target="_blank" class="insta-item reveal delay-3"><img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=300&q=60" alt="Instagram" loading="lazy"></a>
+      </div>
+    </div>
+  </section>
+
+  <div id="footer"></div>
+  <div id="toast-container"></div>
+
+  <script src="js/main.js"></script>
+  <script>
+    async function loadHomeProducts() {
+      try {
+        const [featuredRes, newRes] = await Promise.all([
+          apiFetch('/products?featured=true&limit=4'),
+          apiFetch('/products?newArrival=true&limit=4')
+        ]);
+        document.getElementById('featured-products').innerHTML =
+          featuredRes.products.length ? featuredRes.products.map(buildProductCard).join('') :
+          '<p style="grid-column:1/-1;text-align:center;color:var(--gray-400);padding:2rem">No featured products yet.</p>';
+        document.getElementById('new-arrivals').innerHTML =
+          newRes.products.length ? newRes.products.map(buildProductCard).join('') :
+          '<p style="grid-column:1/-1;text-align:center;color:var(--gray-400);padding:2rem">No new arrivals yet.</p>';
+        initReveal();
+      } catch(err) {
+        const msg = `<p style="grid-column:1/-1;text-align:center;color:var(--gray-400);padding:2rem">Could not load products — make sure the server is running.</p>`;
+        document.getElementById('featured-products').innerHTML = msg;
+        document.getElementById('new-arrivals').innerHTML = '';
+      }
+    }
+
+    async function submitNewsletter(e) {
+      e.preventDefault();
+      const form = e.target;
+      const email = form.querySelector('input[type="email"]').value;
+      const btn   = form.querySelector('button[type="submit"]');
+      btn.disabled = true; btn.textContent = 'Joining…';
+      try {
+        const res = await apiFetch('/newsletter/subscribe', { method:'POST', body: JSON.stringify({ email }) });
+        Toast.show(res.message, 'success'); form.reset();
+      } catch(err) { Toast.show(err.message || 'Could not subscribe', 'error'); }
+      finally { btn.disabled = false; btn.textContent = 'Subscribe'; }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadHomeProducts);
+  </script>
+</body>
+</html>

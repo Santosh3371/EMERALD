@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cart — EMERALD</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .cart-wrap{padding:3rem 0 5rem;position:relative;z-index:1}
+    .cart-layout{display:grid;grid-template-columns:1fr 360px;gap:2.5rem}
+    .glass-table{background:rgba(255,255,255,.78);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.7);border-radius:var(--r-xl);overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.05)}
+    .cart-table{width:100%;border-collapse:collapse}
+    .cart-table th{text-align:left;font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--gray-400);padding:1.25rem 1.5rem;border-bottom:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.4)}
+    .cart-table td{padding:1.25rem 1.5rem;border-bottom:1px solid rgba(0,0,0,.04);vertical-align:middle}
+    .cart-img{width:72px;height:90px;border-radius:var(--r-md);overflow:hidden;flex-shrink:0}
+    .cart-img img{width:100%;height:100%;object-fit:cover}
+    .cart-name{font-family:var(--font-display);font-weight:600;font-size:.95rem;margin-bottom:.25rem}
+    .cart-meta{font-size:.75rem;color:var(--gray-400)}
+    .qty-ctrl{display:flex;align-items:center;border:1.5px solid var(--gray-200);border-radius:var(--r-full);width:fit-content;background:white}
+    .qty-btn{width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:1rem;cursor:pointer;color:var(--gray-600);border:none;background:none}
+    .qty-inp{width:36px;text-align:center;border:none;font-size:.9rem;font-weight:700;outline:none}
+    .rm-btn{background:none;border:none;cursor:pointer;color:var(--gray-300);padding:.35rem;border-radius:var(--r-sm);transition:all .2s}
+    .rm-btn:hover{color:#ef4444;background:#fef2f2}
+    .summary-card{background:rgba(255,255,255,.82);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.75);border-radius:var(--r-xl);padding:2rem;position:sticky;top:84px;box-shadow:0 4px 24px rgba(0,0,0,.06)}
+    .sum-row{display:flex;justify-content:space-between;font-size:.875rem;padding:.6rem 0}
+    .sum-row.total{font-weight:800;font-size:1.1rem;border-top:1px solid var(--gray-200);margin-top:.5rem;padding-top:1rem}
+    .promo-row{display:flex;gap:.5rem;margin:1rem 0}
+    .promo-row input{flex:1;padding:.65rem .9rem;border:1.5px solid var(--gray-200);border-radius:var(--r-full);font-size:.82rem;outline:none;background:rgba(255,255,255,.8)}
+    .promo-row input:focus{border-color:var(--emerald-500)}
+    .ship-bar{background:var(--emerald-50);border-radius:var(--r-lg);padding:.875rem 1rem;margin-bottom:1rem;font-size:.8rem}
+    .ship-prog{height:3px;background:var(--gray-200);border-radius:var(--r-full);margin-top:.5rem;overflow:hidden}
+    .ship-fill{height:100%;background:var(--emerald-600);border-radius:var(--r-full);transition:width .4s}
+    .empty-cart{text-align:center;padding:6rem 2rem;background:rgba(255,255,255,.7);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.6);border-radius:var(--r-xl)}
+    @media(max-width:1024px){.cart-layout{grid-template-columns:1fr}.summary-card{position:static}}
+    @media(max-width:640px){.cart-table thead{display:none}.cart-table td{display:block}.cart-table tr{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;padding:1rem}}
+  </style>
+</head>
+<body>
+  <div id="navbar"></div>
+  <div class="page-header"><div class="container"><h1>Shopping Cart</h1><p>Review your selections before checkout</p></div></div>
+  <div class="container cart-wrap"><div id="cart-root"></div></div>
+  <div id="footer"></div>
+  <div id="toast-container"></div>
+  <script src="../js/main.js"></script>
+  <script>
+    function render() {
+      const items = Cart.get();
+      const root = document.getElementById('cart-root');
+      if (!items.length) {
+        root.innerHTML = `<div class="empty-cart"><div style="font-size:4rem;margin-bottom:1.5rem;opacity:.3">🛍️</div><h2>Your cart is empty</h2><p style="margin:.75rem 0 2rem">Looks like you haven't added anything yet.</p><a href="shop.html" class="btn btn-primary btn-lg">Start Shopping</a></div>`;
+        return;
+      }
+      const sub = Cart.total(), ship = sub>=100?0:9.99, tax=sub*.08, total=sub+ship+tax;
+      const pct = Math.min(100,(sub/100)*100), left = Math.max(0,100-sub);
+      root.innerHTML = `<div class="cart-layout">
+        <div>
+          <div class="glass-table">
+            <table class="cart-table">
+              <thead><tr><th>Product</th><th>Price</th><th>Qty</th><th>Total</th><th></th></tr></thead>
+              <tbody>${items.map(it=>`<tr>
+                <td><div style="display:flex;gap:1rem;align-items:center">
+                  <div class="cart-img"><img src="${it.image}" alt="${it.name}" loading="lazy"></div>
+                  <div><div class="cart-name"><a href="product.html?slug=${it.slug}">${it.name}</a></div>
+                  <div class="cart-meta">Size: ${it.size} · ${it.color}</div></div>
+                </div></td>
+                <td style="font-weight:600">${formatPrice(it.price)}</td>
+                <td><div class="qty-ctrl">
+                  <button class="qty-btn" onclick="updQty('${it.productId}','${it.size}','${it.color}',${it.quantity-1})">−</button>
+                  <input class="qty-inp" value="${it.quantity}" type="number" onchange="updQty('${it.productId}','${it.size}','${it.color}',this.value)">
+                  <button class="qty-btn" onclick="updQty('${it.productId}','${it.size}','${it.color}',${it.quantity+1})">+</button>
+                </div></td>
+                <td style="font-weight:700">${formatPrice(it.price*it.quantity)}</td>
+                <td><button class="rm-btn" onclick="rmItem('${it.productId}','${it.size}','${it.color}')">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+                </button></td>
+              </tr>`).join('')}</tbody>
+            </table>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1.25rem">
+            <a href="shop.html" class="btn btn-outline">← Continue Shopping</a>
+            <button onclick="Cart.clear();render()" style="font-size:.8rem;color:var(--gray-400);background:none;border:none;cursor:pointer">Clear Cart</button>
+          </div>
+        </div>
+        <div>
+          <div class="summary-card">
+            <h3 style="font-size:1.05rem;margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:1px solid var(--gray-200)">Order Summary</h3>
+            <div class="ship-bar">
+              ${left>0?`Add <strong>${formatPrice(left)}</strong> more for free shipping!`:`<span style="color:var(--emerald-700);font-weight:700">🎉 You have free shipping!</span>`}
+              <div class="ship-prog"><div class="ship-fill" style="width:${pct}%"></div></div>
+            </div>
+            <div class="promo-row">
+              <input type="text" id="promo" placeholder="Promo code">
+              <button class="btn btn-outline btn-sm" onclick="applyPromo()">Apply</button>
+            </div>
+            <div class="sum-row"><span>Subtotal (${Cart.count()} items)</span><span>${formatPrice(sub)}</span></div>
+            <div class="sum-row"><span>Shipping</span><span>${ship===0?'<span style="color:var(--emerald-600)">Free</span>':formatPrice(ship)}</span></div>
+            <div class="sum-row"><span>Tax (8%)</span><span>${formatPrice(tax)}</span></div>
+            <div class="sum-row total"><span>Total</span><span>${formatPrice(total)}</span></div>
+            <a href="checkout.html" class="btn btn-primary btn-full btn-lg" style="margin-top:1.25rem">Checkout →</a>
+            <p style="text-align:center;font-size:.72rem;color:var(--gray-400);margin-top:.875rem">🔒 Secured by Stripe SSL</p>
+          </div>
+        </div>
+      </div>`;
+    }
+    function updQty(id,size,color,qty){ Cart.updateQty(id,size,color,parseInt(qty)); render(); }
+    function rmItem(id,size,color){ Cart.remove(id,size,color); Toast.show('Item removed','success'); render(); }
+    function applyPromo(){ Toast.show(document.getElementById('promo').value.toUpperCase()==='EMERALD15'?'15% discount applied! 🎉':'Invalid promo code', document.getElementById('promo').value.toUpperCase()==='EMERALD15'?'success':'error'); }
+    document.addEventListener('DOMContentLoaded', render);
+  </script>
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout — EMERALD</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    .checkout-layout{display:grid;grid-template-columns:1fr 380px;gap:3rem;padding:3rem 0 5rem;position:relative;z-index:1}
+    .glass-section{background:rgba(255,255,255,.78);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.7);border-radius:var(--r-xl);padding:2rem;margin-bottom:1.5rem;box-shadow:0 4px 24px rgba(0,0,0,.05)}
+    .glass-section h3{font-size:.95rem;font-weight:800;margin-bottom:1.5rem;display:flex;align-items:center;gap:.75rem}
+    .step-num{width:26px;height:26px;background:var(--grad-hero);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;flex-shrink:0}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    #card-element{padding:.875rem 1rem;border:1.5px solid var(--gray-200);border-radius:var(--r-md);background:rgba(255,255,255,.8);transition:border-color .2s}
+    #card-element.StripeElement--focus{border-color:var(--emerald-500);box-shadow:0 0 0 3px rgba(16,185,129,.12)}
+    #card-errors{color:#ef4444;font-size:.82rem;margin-top:.4rem;min-height:18px}
+    .sum-sticky{position:sticky;top:84px}
+    .checkout-item{display:flex;gap:.875rem;padding:.875rem 0;border-bottom:1px solid rgba(0,0,0,.05)}
+    .co-img{width:52px;height:66px;border-radius:var(--r-md);overflow:hidden;flex-shrink:0;position:relative}
+    .co-img img{width:100%;height:100%;object-fit:cover}
+    .co-badge{position:absolute;top:-5px;right:-5px;width:18px;height:18px;background:var(--emerald-600);color:white;border-radius:50%;font-size:.62rem;font-weight:700;display:flex;align-items:center;justify-content:center}
+    .co-row{display:flex;justify-content:space-between;font-size:.85rem;padding:.5rem 0}
+    .co-row.big{font-weight:800;font-size:1rem;border-top:1px solid var(--gray-200);margin-top:.5rem;padding-top:.875rem}
+    .ship-opt{display:flex;align-items:center;gap:.875rem;padding:.875rem 1rem;border:1.5px solid var(--gray-200);border-radius:var(--r-md);cursor:pointer;transition:all .2s;margin-bottom:.625rem}
+    .ship-opt.sel{border-color:var(--emerald-600);background:var(--emerald-50)}
+    #place-btn{position:relative}
+    #place-btn .spin{display:none;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:white;border-radius:50%;animation:spin .6s linear infinite}
+    #place-btn.loading .lbl{display:none}
+    #place-btn.loading .spin{display:block}
+    @media(max-width:1024px){.checkout-layout{grid-template-columns:1fr}.sum-sticky{position:static}}
+    @media(max-width:640px){.form-row{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div id="navbar"></div>
+  <div class="page-header"><div class="container"><h1>Checkout</h1><p>Complete your order below</p></div></div>
+  <div class="container"><div class="checkout-layout">
+    <div>
+      <div class="glass-section">
+        <h3><span class="step-num">1</span>Contact Information</h3>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">First Name *</label><input class="form-control" id="fn" required autocomplete="given-name"></div>
+          <div class="form-group"><label class="form-label">Last Name *</label><input class="form-control" id="ln" required autocomplete="family-name"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Email *</label><input class="form-control" type="email" id="em" required autocomplete="email"></div>
+        <div class="form-group"><label class="form-label">Phone</label><input class="form-control" type="tel" id="ph" autocomplete="tel"></div>
+      </div>
+      <div class="glass-section">
+        <h3><span class="step-num">2</span>Shipping Address</h3>
+        <div class="form-group"><label class="form-label">Street Address *</label><input class="form-control" id="st" required autocomplete="street-address"></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">City *</label><input class="form-control" id="ct" required></div>
+          <div class="form-group"><label class="form-label">State *</label><input class="form-control" id="sv" required></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">ZIP *</label><input class="form-control" id="zp" required autocomplete="postal-code"></div>
+          <div class="form-group"><label class="form-label">Country *</label>
+            <select class="form-control" id="co">
+              <option value="US">United States</option><option value="GB">United Kingdom</option>
+              <option value="CA">Canada</option><option value="AU">Australia</option>
+              <option value="IN">India</option><option value="DE">Germany</option>
+              <option value="FR">France</option><option value="SG">Singapore</option>
+            </select>
+          </div>
+        </div>
+        <label class="form-label" style="margin-bottom:.75rem">Shipping Method</label>
+        <label class="ship-opt sel" id="ship-std" onclick="selShip('std')">
+          <input type="radio" name="ship" value="std" checked style="accent-color:var(--emerald-600)">
+          <div style="flex:1"><div style="font-weight:600;font-size:.875rem">Standard (5–7 days)</div><div style="font-size:.75rem;color:var(--gray-400)">Free on orders over $100</div></div>
+          <span id="std-price" style="font-weight:700">$9.99</span>
+        </label>
+        <label class="ship-opt" id="ship-exp" onclick="selShip('exp')">
+          <input type="radio" name="ship" value="exp" style="accent-color:var(--emerald-600)">
+          <div style="flex:1"><div style="font-weight:600;font-size:.875rem">Express (2–3 days)</div></div>
+          <span style="font-weight:700">$24.99</span>
+        </label>
+      </div>
+      <div class="glass-section">
+        <h3><span class="step-num">3</span>Payment</h3>
+        <div class="form-group">
+          <label class="form-label">Card Details</label>
+          <div id="card-element"></div>
+          <div id="card-errors"></div>
+        </div>
+        <p style="font-size:.75rem;color:var(--gray-400);margin-top:.5rem">🔒 Payments secured by Stripe. We never store card details.</p>
+      </div>
+      <button class="btn btn-primary btn-full btn-lg" id="place-btn" onclick="placeOrder()">
+        <span class="lbl">Place Order & Pay</span><div class="spin"></div>
+      </button>
+      <p style="text-align:center;font-size:.72rem;color:var(--gray-400);margin-top:.875rem">🔒 SSL Encrypted &nbsp;·&nbsp; Powered by Stripe &nbsp;·&nbsp; 30-Day Returns</p>
+    </div>
+    <div class="sum-sticky">
+      <div class="glass-section">
+        <h3 style="border-bottom:1px solid var(--gray-200);padding-bottom:1rem;margin-bottom:1rem">Order Summary</h3>
+        <div id="co-items"></div>
+        <div id="co-totals"></div>
+      </div>
+      <div style="background:var(--emerald-50);border-radius:var(--r-md);padding:.875rem 1rem;font-size:.78rem;color:var(--emerald-700);margin-top:-.5rem">
+        ✓ Free returns within 30 days &nbsp;·&nbsp; ✓ Secure checkout
+      </div>
+    </div>
+  </div></div>
+  <div id="footer"></div><div id="toast-container"></div>
+  <script src="../js/main.js"></script>
+  <script>
+    let stripe, cardEl;
+    function selShip(type) {
+      document.getElementById('ship-std').classList.toggle('sel', type==='std');
+      document.getElementById('ship-exp').classList.toggle('sel', type==='exp');
+    }
+    function renderSummary() {
+      const items = Cart.get();
+      if (!items.length) { window.location.href='cart.html'; return; }
+      const sub = Cart.total(), ship = sub>=100?0:9.99, tax=sub*.08, total=sub+ship+tax;
+      document.getElementById('std-price').textContent = ship===0?'Free':formatPrice(ship);
+      document.getElementById('co-items').innerHTML = items.map(it=>`
+        <div class="checkout-item">
+          <div class="co-img"><img src="${it.image}" alt="${it.name}"><span class="co-badge">${it.quantity}</span></div>
+          <div style="flex:1"><div style="font-weight:600;font-size:.85rem">${it.name}</div><div style="font-size:.72rem;color:var(--gray-400)">${it.size} · ${it.color}</div></div>
+          <div style="font-weight:700;font-size:.875rem">${formatPrice(it.price*it.quantity)}</div>
+        </div>`).join('');
+      document.getElementById('co-totals').innerHTML = `
+        <div class="co-row"><span>Subtotal</span><span>${formatPrice(sub)}</span></div>
+        <div class="co-row"><span>Shipping</span><span>${ship===0?'Free':formatPrice(ship)}</span></div>
+        <div class="co-row"><span>Tax (8%)</span><span>${formatPrice(tax)}</span></div>
+        <div class="co-row big"><span>Total</span><span>${formatPrice(total)}</span></div>`;
+    }
+    async function initStripe() {
+      try {
+        const { publishableKey } = await apiFetch('/config/stripe-key');
+        if (publishableKey && !publishableKey.includes('REPLACE')) {
+          stripe = Stripe(publishableKey);
+          const els = stripe.elements();
+          cardEl = els.create('card',{style:{base:{fontFamily:'Inter,sans-serif',fontSize:'15px',color:'#111827','::placeholder':{color:'#9ca3af'}}}});
+          cardEl.mount('#card-element');
+          cardEl.on('change', e => { document.getElementById('card-errors').textContent = e.error?.message||''; });
+          return;
+        }
+      } catch(e) {
+        console.error('Stripe initialization failed:', e);
+      }
+      document.getElementById('card-element').innerHTML = '<div style="padding:.875rem;background:var(--emerald-50);border-radius:var(--r-md);font-size:.82rem;color:var(--emerald-700)">⚠️ Add your Stripe public key to <code>.env</code> to enable payments.</div>';
+    }
+    function validate() {
+      for (const [id, label] of [['fn','First name'],['ln','Last name'],['em','Email'],['st','Street'],['ct','City'],['sv','State'],['zp','ZIP']]) {
+        if (!document.getElementById(id)?.value.trim()) { Toast.show(`Please enter ${label}`, 'error'); document.getElementById(id)?.focus(); return false; }
+      }
+      return true;
+    }
+    async function placeOrder() {
+      if (!validate()) return;
+      const btn = document.getElementById('place-btn');
+      btn.classList.add('loading'); btn.disabled = true;
+      const items = Cart.get().map(i=>({productId:i.productId,size:i.size,color:i.color,quantity:i.quantity}));
+      const addr = { fullName:`${document.getElementById('fn').value} ${document.getElementById('ln').value}`, street:document.getElementById('st').value, city:document.getElementById('ct').value, state:document.getElementById('sv').value, zip:document.getElementById('zp').value, country:document.getElementById('co').value, phone:document.getElementById('ph').value };
+      try {
+        const od = await apiFetch('/orders',{method:'POST',body:JSON.stringify({items,shippingAddress:addr,guestEmail:document.getElementById('em').value,userId:Auth.getUser()?._id})});
+        if (stripe && cardEl) {
+          const {paymentIntent, error} = await stripe.confirmCardPayment(od.clientSecret,{payment_method:{card:cardEl,billing_details:{name:addr.fullName,email:document.getElementById('em').value}}});
+          if (error) { Toast.show(error.message,'error'); btn.classList.remove('loading'); btn.disabled=false; return; }
+          await apiFetch(`/orders/${od.orderId}/confirm`,{method:'POST',body:JSON.stringify({paymentIntentId:paymentIntent.id})});
+        }
+        Cart.clear();
+        window.location.href=`confirmation.html?order=${od.orderNumber}&total=${od.total}`;
+      } catch(err) {
+        Toast.show(err.message||'Payment failed. Please try again.','error');
+        btn.classList.remove('loading'); btn.disabled=false;
+      }
+    }
+    document.addEventListener('DOMContentLoaded',()=>{
+      renderSummary(); initStripe();
+      const u=Auth.getUser();
+      if(u){document.getElementById('em').value=u.email;const n=u.name.split(' ');document.getElementById('fn').value=n[0]||'';document.getElementById('ln').value=n.slice(1).join(' ')||'';}
+    });
+  </script>
+</body>
+</html>

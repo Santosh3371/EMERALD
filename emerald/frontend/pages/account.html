@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Account — EMERALD</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .auth-wrap{max-width:460px;margin:5rem auto;padding:0 1.5rem 5rem;position:relative;z-index:1}
+    .auth-card{background:rgba(255,255,255,.82);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.75);border-radius:var(--r-xl);padding:2.5rem;box-shadow:0 8px 40px rgba(0,0,0,.08)}
+    .auth-tabs{display:flex;border-bottom:2px solid var(--gray-200);margin-bottom:2rem}
+    .auth-tab{flex:1;text-align:center;padding:.875rem;font-weight:700;font-size:.875rem;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--gray-400);transition:all .2s}
+    .auth-tab.active{color:var(--emerald-700);border-bottom-color:var(--emerald-700)}
+    .auth-form{display:none}.auth-form.active{display:block}
+    .password-wrap{position:relative}
+    .password-toggle{position:absolute;right:.9rem;top:50%;transform:translateY(-50%);background:transparent;border:none;color:var(--gray-500);cursor:pointer;padding:0}
+    .password-toggle:hover{color:var(--emerald-700)}
+    .dash-layout{display:grid;grid-template-columns:240px 1fr;gap:2.5rem;padding:3rem 0 5rem;position:relative;z-index:1}
+    .dash-sidebar{background:rgba(255,255,255,.8);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.75);border-radius:var(--r-xl);padding:1.75rem;height:fit-content;position:sticky;top:84px;box-shadow:0 4px 24px rgba(0,0,0,.05)}
+    .dash-avatar{width:64px;height:64px;border-radius:50%;background:var(--grad-hero);color:white;font-size:1.5rem;font-weight:700;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;box-shadow:0 4px 16px rgba(6,95,70,.3)}
+    .dash-name{font-weight:700;font-size:1rem;color:var(--gray-900)}
+    .dash-email{font-size:.78rem;color:var(--gray-400);margin-bottom:1.5rem}
+    .dash-nav a{display:flex;align-items:center;gap:.625rem;padding:.7rem .875rem;border-radius:var(--r-md);font-size:.875rem;color:var(--gray-600);transition:all .2s;margin-bottom:.25rem}
+    .dash-nav a:hover,.dash-nav a.active{background:var(--emerald-50);color:var(--emerald-700);font-weight:600}
+    .dash-panel{display:none}.dash-panel.active{display:block}
+    .panel-title{font-size:1.5rem;font-weight:700;margin-bottom:2rem;padding-bottom:1rem;border-bottom:1px solid var(--gray-200)}
+    .orders-table{width:100%;border-collapse:collapse;background:rgba(255,255,255,.8);backdrop-filter:blur(12px);border-radius:var(--r-lg);overflow:hidden}
+    .orders-table th{text-align:left;font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--gray-400);padding:.875rem 1rem;background:rgba(255,255,255,.5);border-bottom:1px solid var(--gray-200)}
+    .orders-table td{padding:.875rem 1rem;font-size:.875rem;border-bottom:1px solid var(--gray-100)}
+    .status{padding:.22rem .65rem;border-radius:var(--r-full);font-size:.7rem;font-weight:700}
+    .s-pending{background:#fef9c3;color:#854d0e}.s-processing{background:#dbeafe;color:#1e40af}
+    .s-shipped{background:#d1fae5;color:var(--emerald-800)}.s-delivered{background:var(--emerald-50);color:var(--emerald-700)}
+    @media(max-width:768px){.dash-layout{grid-template-columns:1fr}.dash-sidebar{position:static}}
+  </style>
+</head>
+<body>
+  <div id="navbar"></div>
+  <div class="page-header"><div class="container"><h1>My Account</h1></div></div>
+
+  <div id="auth-section" style="display:none">
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <div class="auth-tab active" onclick="switchAuth('login',this)">Sign In</div>
+          <div class="auth-tab" onclick="switchAuth('register',this)">Create Account</div>
+        </div>
+        <form class="auth-form active" id="login-form" onsubmit="doLogin(event)">
+          <div class="form-group"><label class="form-label">Email</label><input class="form-control" type="email" id="l-email" required autocomplete="email" placeholder="you@example.com"></div>
+          <div class="form-group"><label class="form-label">Password</label><div class="password-wrap"><input class="form-control" type="password" id="l-pass" required autocomplete="current-password" placeholder="••••••••"><button type="button" class="password-toggle" onclick="togglePassword('l-pass', this)" aria-label="Show password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+          <div style="text-align:right;margin-bottom:1.25rem"><a href="#" style="font-size:.82rem;color:var(--emerald-600)">Forgot password?</a></div>
+          <button type="submit" class="btn btn-primary btn-full" id="l-btn">Sign In</button>
+          <p style="text-align:center;font-size:.82rem;color:var(--gray-400);margin-top:1.25rem">New here? <a href="#" style="color:var(--emerald-600)" onclick="switchAuth('register')">Create an account</a></p>
+        </form>
+        <form class="auth-form" id="register-form" onsubmit="doRegister(event)">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div class="form-group"><label class="form-label">First Name</label><input class="form-control" id="r-fn" required autocomplete="given-name"></div>
+            <div class="form-group"><label class="form-label">Last Name</label><input class="form-control" id="r-ln" required autocomplete="family-name"></div>
+          </div>
+          <div class="form-group"><label class="form-label">Email</label><input class="form-control" type="email" id="r-email" required autocomplete="email"></div>
+          <div class="form-group"><label class="form-label">Password (min 6 chars)</label><div class="password-wrap"><input class="form-control" type="password" id="r-pass" required minlength="6" autocomplete="new-password"><button type="button" class="password-toggle" onclick="togglePassword('r-pass', this)" aria-label="Show password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+          <div class="form-group" style="display:flex;gap:.625rem;align-items:flex-start">
+            <input type="checkbox" id="r-terms" required style="margin-top:.2rem;accent-color:var(--emerald-600)">
+            <label for="r-terms" style="font-size:.8rem;color:var(--gray-500)">I agree to the <a href="#" style="color:var(--emerald-600)">Terms</a> and <a href="#" style="color:var(--emerald-600)">Privacy Policy</a></label>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" id="r-btn">Create Account</button>
+          <div style="margin-top:1rem">
+            <label style="display:flex;align-items:center;gap:.625rem;font-size:.8rem;color:var(--gray-400);cursor:pointer">
+              <input type="checkbox" id="r-news" style="accent-color:var(--emerald-600)">
+              Subscribe for 15% off your first order
+            </label>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="dash-section" style="display:none">
+    <div class="container"><div class="dash-layout">
+      <aside class="dash-sidebar">
+        <div class="dash-avatar" id="d-avatar">U</div>
+        <div class="dash-name" id="d-name">—</div>
+        <div class="dash-email" id="d-email">—</div>
+        <nav class="dash-nav">
+          <a href="#" class="active" onclick="showPanel('orders',this)">📦 My Orders</a>
+          <a href="#" onclick="showPanel('profile',this)">👤 Profile</a>
+          <a href="#" onclick="showPanel('wishlist',this)">♡ Wishlist</a>
+          <a href="#" onclick="Auth.logout()" style="color:#ef4444;margin-top:1rem">↩ Sign Out</a>
+        </nav>
+      </aside>
+      <div>
+        <div class="dash-panel active" id="panel-orders">
+          <div class="panel-title">My Orders</div>
+          <div id="orders-content"><div class="loading-container"><div class="spinner"></div></div></div>
+        </div>
+        <div class="dash-panel" id="panel-profile">
+          <div class="panel-title">Edit Profile</div>
+          <form onsubmit="updateProfile(event)" style="max-width:480px;background:rgba(255,255,255,.8);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.7);border-radius:var(--r-xl);padding:2rem">
+            <div class="form-group"><label class="form-label">Full Name</label><input class="form-control" id="p-name"></div>
+            <div class="form-group"><label class="form-label">Email</label><input class="form-control" type="email" id="p-email"></div>
+            <div class="form-group"><label class="form-label">New Password (leave blank to keep)</label><input class="form-control" type="password" id="p-pass" placeholder="New password"></div>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+          </form>
+        </div>
+            <div class="dash-panel" id="panel-wishlist">
+          <div class="panel-title">My Wishlist</div>
+          <div style="background:rgba(255,255,255,.8);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.7);border-radius:var(--r-xl);padding:3rem;text-align:center">
+            <div style="font-size:3rem;margin-bottom:1rem;opacity:.3">♡</div>
+            <p style="color:var(--gray-400)">Your wishlist is empty.<br><a href="shop.html" style="color:var(--emerald-600)">Explore the collection →</a></p>
+          </div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <div id="footer"></div><div id="toast-container"></div>
+  <script src="../js/main.js"></script>
+  <script>
+    function togglePassword(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const isHidden = input.type === 'password';
+      input.type = isHidden ? 'text' : 'password';
+      btn.innerHTML = isHidden
+        ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3l18 18"/><path d="M10.6 10.6A3 3 0 0 0 13.4 13.4"/><path d="M9.88 5.08A10.94 10.94 0 0 1 12 5c7 0 11 7 11 7a20.2 20.2 0 0 1-2.16 2.95"/><path d="M6.61 6.61A20.2 20.2 0 0 0 1 12s4 7 11 7a10.94 10.94 0 0 0 4.14-.88"/></svg>'
+        : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"/><circle cx="12" cy="12" r="3"/></svg>';
+      btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+    }
+
+    function switchAuth(tab, el) {
+      document.querySelectorAll('.auth-form').forEach(f=>f.classList.remove('active'));
+      document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
+      document.getElementById(`${tab}-form`).classList.add('active');
+      if(el) el.classList.add('active');
+      else document.querySelectorAll('.auth-tab')[tab==='login'?0:1].classList.add('active');
+    }
+    async function doLogin(e) {
+      e.preventDefault(); const btn=document.getElementById('l-btn');
+      btn.disabled=true; btn.textContent='Signing in…';
+      try {
+        const email=document.getElementById('l-email').value.trim().toLowerCase();
+        const password=document.getElementById('l-pass').value;
+        const d=await apiFetch('/auth/login',{method:'POST',body:JSON.stringify({email,password})});
+        Auth.login({ _id:d._id, name:d.name, email:d.email, role:d.role }, d.token); Toast.show(d.message || `Welcome back, ${d.name}!`,'success');
+        setTimeout(()=>window.location.reload(),800);
+      } catch(err){Toast.show(err.message,'error');}
+      finally{btn.disabled=false;btn.textContent='Sign In';}
+    }
+    async function doRegister(e) {
+      e.preventDefault(); const btn=document.getElementById('r-btn');
+      btn.disabled=true; btn.textContent='Creating…';
+      const first=document.getElementById('r-fn').value.trim();
+      const last=document.getElementById('r-ln').value.trim();
+      const name=`${first} ${last}`.trim();
+      const email=document.getElementById('r-email').value.trim().toLowerCase();
+      const password=document.getElementById('r-pass').value;
+      try {
+        const d=await apiFetch('/auth/register',{method:'POST',body:JSON.stringify({name,email,password})});
+        Auth.login({ _id:d._id, name:d.name, email:d.email, role:d.role }, d.token);
+        if(document.getElementById('r-news').checked) await apiFetch('/newsletter/subscribe',{method:'POST',body:JSON.stringify({email:d.email,name})}).catch(()=>{});
+        Toast.show(d.message || 'Welcome to EMERALD! 🎉','success'); setTimeout(()=>window.location.reload(),800);
+      } catch(err){Toast.show(err.message,'error');}
+      finally{btn.disabled=false;btn.textContent='Create Account';}
+    }
+    function showPanel(id, el) {
+      document.querySelectorAll('.dash-panel').forEach(p=>p.classList.remove('active'));
+      document.querySelectorAll('.dash-nav a').forEach(a=>a.classList.remove('active'));
+      document.getElementById(`panel-${id}`).classList.add('active');
+      if(el) el.classList.add('active');
+      if(id==='orders') loadOrders();
+    }
+    async function loadOrders() {
+      const el=document.getElementById('orders-content');
+      try {
+        const orders=await apiFetch('/orders/my');
+        if(!orders.length){el.innerHTML='<div style="background:rgba(255,255,255,.8);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.7);border-radius:var(--r-xl);padding:3rem;text-align:center"><div style="font-size:3rem;margin-bottom:1rem;opacity:.3">📦</div><p style="color:var(--gray-400)">No orders yet. <a href="shop.html" style="color:var(--emerald-600)">Start shopping →</a></p></div>';return;}
+        el.innerHTML=`<table class="orders-table"><thead><tr><th>Order #</th><th>Date</th><th>Items</th><th>Total</th><th>Status</th></tr></thead><tbody>${orders.map(o=>`<tr><td style="font-family:monospace;color:var(--emerald-700)">${o.orderNumber}</td><td>${new Date(o.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td><td>${o.items.length} item${o.items.length>1?'s':''}</td><td style="font-weight:700">${formatPrice(o.total)}</td><td><span class="status s-${o.status}">${o.status}</span></td></tr>`).join('')}</tbody></table>`;
+      } catch(err){el.innerHTML=`<p style="color:var(--gray-400);padding:1rem">${err.message}</p>`;}
+    }
+    async function updateProfile(e) {
+      e.preventDefault();
+      try {
+        const d=await apiFetch('/auth/profile',{method:'PUT',body:JSON.stringify({name:document.getElementById('p-name').value,email:document.getElementById('p-email').value,password:document.getElementById('p-pass').value||undefined})});
+        Auth.login(d,d.token); Toast.show('Profile updated!','success');
+      } catch(err){Toast.show(err.message,'error');}
+    }
+    document.addEventListener('DOMContentLoaded',()=>{
+      const u=Auth.getUser();
+      if(u){
+        document.getElementById('auth-section').style.display='none';
+        document.getElementById('dash-section').style.display='';
+        document.getElementById('d-avatar').textContent=u.name.charAt(0).toUpperCase();
+        document.getElementById('d-name').textContent=u.name;
+        document.getElementById('d-email').textContent=u.email;
+        document.getElementById('p-name').value=u.name;
+        document.getElementById('p-email').value=u.email;
+        loadOrders();
+      } else {
+        document.getElementById('auth-section').style.display='';
+        document.getElementById('dash-section').style.display='none';
+      }
+    });
+  </script>
+</body>
+</html>
