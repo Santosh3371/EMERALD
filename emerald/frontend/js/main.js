@@ -141,12 +141,18 @@ function renderStars(rating, numReviews = null) {
 
 function buildProductCard(product) {
   const pagePath = window.location.pathname.includes('/pages/') ? '' : 'pages/';
-  const badge = product.newArrival ? '<span class="product-card-badge badge-new">New</span>'
+  const badge = product.bestSeller ? '<span class="product-card-badge badge-featured">Best Seller</span>'
+    : product.newArrival ? '<span class="product-card-badge badge-new">New</span>'
     : product.onSale ? '<span class="product-card-badge badge-sale">Sale</span>'
     : product.featured ? '<span class="product-card-badge badge-featured">Featured</span>' : '';
   const price = product.salePrice
     ? `<span class="price-current price-sale">${formatPrice(product.salePrice)}</span><span class="price-original">${formatPrice(product.price)}</span>`
     : `<span class="price-current">${formatPrice(product.price)}</span>`;
+  const stockLabel = product.stock === 0 
+    ? '<span style="font-size:0.7rem;color:#ef4444;font-weight:700">Out of Stock</span>'
+    : product.stock <= 15 
+      ? `<span style="font-size:0.7rem;color:#b45309;font-weight:600">Only ${product.stock} left!</span>`
+      : `<span style="font-size:0.7rem;color:var(--gray-400)">In Stock (${product.stock})</span>`;
   return `
     <article class="product-card reveal">
       <a href="${pagePath}product.html?slug=${product.slug}">
@@ -156,18 +162,23 @@ function buildProductCard(product) {
                alt="${product.name}" loading="lazy">
           <div class="product-card-actions">
             <button class="btn btn-primary btn-sm" style="flex:1;border-radius:var(--r-full)"
-              onclick="quickAddToCart(event,'${product._id}','${product.slug}')">Add to Cart</button>
+              onclick="quickAddToCart(event,'${product._id}','${product.slug}')" ${product.stock === 0 ? 'disabled style="opacity:.5"' : ''}>${product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}</button>
             <a href="${pagePath}product.html?slug=${product.slug}" class="btn btn-outline btn-sm">View</a>
           </div>
         </div>
       </a>
       <div class="product-card-body">
-        <div class="product-card-category">${product.category}</div>
+        <div style="display:flex;justify-content:between;align-items:center;font-size:0.75rem;color:var(--gray-400);margin-bottom:0.2rem">
+          <span style="text-transform:uppercase">${product.category}</span>
+          <span style="margin:0 0.4rem">•</span>
+          <span style="font-weight:600;color:var(--emerald-700)">${product.brand || 'EMERALD'}</span>
+        </div>
         <h3 class="product-card-name"><a href="${pagePath}product.html?slug=${product.slug}">${product.name}</a></h3>
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.4rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.4rem;margin-bottom:0.4rem">
           <div class="product-card-price">${price}</div>
           ${product.rating ? renderStars(product.rating, product.numReviews) : ''}
         </div>
+        <div style="margin-top:0.2rem">${stockLabel}</div>
       </div>
     </article>`;
 }

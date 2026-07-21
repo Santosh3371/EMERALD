@@ -5,7 +5,7 @@
   <title>Shop — EMERALD</title>
   <link rel="stylesheet" href="../css/style.css">
   <style>
-    .shop-layout { display: grid; grid-template-columns: 260px 1fr; gap: 2rem; padding: 3rem 0 5rem; position: relative; z-index: 1; }
+    .shop-layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 2rem; padding: 3rem 0 5rem; position: relative; z-index: 1; }
     /* sidebar */
     .filters-sidebar { position: sticky; top: 80px; background: rgba(255,255,255,0.78); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.7); border-radius: var(--r-xl); padding: 1.75rem; box-shadow: 0 4px 24px rgba(0,0,0,0.05); }
     .filter-group { margin-bottom: 1.75rem; }
@@ -63,6 +63,26 @@
             <div class="filter-option"><input type="radio" name="cat" id="c-footwear" value="footwear" onchange="applyFilters()"><label for="c-footwear">Footwear</label></div>
             <div class="filter-option"><input type="radio" name="cat" id="c-bags" value="bags" onchange="applyFilters()"><label for="c-bags">Bags</label></div>
             <div class="filter-option"><input type="radio" name="cat" id="c-jewelry" value="jewelry" onchange="applyFilters()"><label for="c-jewelry">Jewelry</label></div>
+          </div>
+          <div class="filter-group">
+            <div class="filter-title">Brand</div>
+            <select id="brand-sel" onchange="applyFilters()" style="width:100%; padding:.6rem 1rem; border:1.5px solid var(--gray-200); border-radius:var(--r-md); font-size:.82rem; background:rgba(255,255,255,.8); outline:none; cursor:pointer; color:var(--gray-700);">
+              <option value="">All Brands</option>
+              <option value="Aurelia Sarto">Aurelia Sarto</option>
+              <option value="Bespoke Atelier">Bespoke Atelier</option>
+              <option value="L’Horizon">L’Horizon</option>
+              <option value="Sovereign Style">Sovereign Style</option>
+              <option value="Elysium Tailors">Elysium Tailors</option>
+              <option value="Monarch Label">Monarch Label</option>
+              <option value="Verdant Fashion">Verdant Fashion</option>
+              <option value="Opus Noir">Opus Noir</option>
+              <option value="Nomad & Co.">Nomad & Co.</option>
+              <option value="Heritage Wear">Heritage Wear</option>
+              <option value="Velasquez Studio">Velasquez Studio</option>
+              <option value="Aura Minimalist">Aura Minimalist</option>
+              <option value="Drape & Stitch">Drape & Stitch</option>
+              <option value="Meridian Classics">Meridian Classics</option>
+            </select>
           </div>
           <div class="filter-group">
             <div class="filter-title">Price Range</div>
@@ -123,6 +143,7 @@
       const grid = document.getElementById('products-grid');
       grid.innerHTML = '<div class="loading-container" style="grid-column:1/-1"><div class="spinner"></div></div>';
       const cat = document.querySelector('input[name="cat"]:checked')?.value || '';
+      const brand = document.getElementById('brand-sel').value;
       const min = document.getElementById('minP').value;
       const max = document.getElementById('maxP').value;
       const sort = document.getElementById('sort-sel').value;
@@ -132,6 +153,7 @@
       const isFeat = document.getElementById('f-feat').checked;
       const params = new URLSearchParams({ sort, limit: 9, page });
       if (cat) params.set('category', cat);
+      if (brand) params.set('brand', brand);
       if (min) params.set('minPrice', min);
       if (max) params.set('maxPrice', max);
       if (selSize) params.set('size', selSize);
@@ -160,6 +182,7 @@
     }
     function clearAll() {
       document.getElementById('c-all').checked = true;
+      document.getElementById('brand-sel').value = '';
       document.getElementById('minP').value = '';
       document.getElementById('maxP').value = '';
       document.getElementById('f-new').checked = false;
@@ -179,6 +202,8 @@
       const params = new URLSearchParams(window.location.search);
       const cat = params.get('category');
       if (cat) { const el = document.getElementById(`c-${cat}`); if(el) el.checked = true; }
+      const brand = params.get('brand');
+      if (brand) { document.getElementById('brand-sel').value = brand; }
       load();
     });
   </script>

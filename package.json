@@ -1,0 +1,14 @@
+{
+  "name": "emerald-store-root",
+  "version": "1.0.0",
+  "description": "EMERALD - Premium Fashion E-commerce Store",
+  "main": "emerald/backend/server.js",
+  "scripts": {
+    "start": "node emerald/backend/server.js",
+    "dev": "npm run dev --prefix emerald",
+    "postinstall": "cd emerald && npm install"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

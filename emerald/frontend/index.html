@@ -411,6 +411,34 @@
     </div>
   </section>
 
+  <!-- ══ BEST SELLERS ════════════════════════════════════ -->
+  <section class="products-section products-bg" style="padding-top:3rem">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="eyebrow">Most Popular</span>
+        <h2>Best Sellers</h2>
+        <p>Our community's absolute favorites.</p>
+      </div>
+      <div class="grid-4" id="best-sellers">
+        <div class="loading-container" style="grid-column:1/-1"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ TRENDING PRODUCTS ════════════════════════════════ -->
+  <section class="products-section" style="background:white;padding-top:3rem">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="eyebrow">On Everyone's Radar</span>
+        <h2>Trending Now</h2>
+        <p>Top rated items and style must-haves.</p>
+      </div>
+      <div class="grid-4" id="trending-products">
+        <div class="loading-container" style="grid-column:1/-1"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </section>
+
   <!-- ══ TESTIMONIALS ════════════════════════════════════ -->
   <section class="testimonials-section">
     <div class="container">
@@ -490,9 +518,11 @@
   <script>
     async function loadHomeProducts() {
       try {
-        const [featuredRes, newRes] = await Promise.all([
+        const [featuredRes, newRes, bestRes, trendingRes] = await Promise.all([
           apiFetch('/products?featured=true&limit=4'),
-          apiFetch('/products?newArrival=true&limit=4')
+          apiFetch('/products?newArrival=true&limit=4'),
+          apiFetch('/products?bestSeller=true&limit=4'),
+          apiFetch('/products?sort=rating&limit=4')
         ]);
         document.getElementById('featured-products').innerHTML =
           featuredRes.products.length ? featuredRes.products.map(buildProductCard).join('') :
@@ -500,11 +530,19 @@
         document.getElementById('new-arrivals').innerHTML =
           newRes.products.length ? newRes.products.map(buildProductCard).join('') :
           '<p style="grid-column:1/-1;text-align:center;color:var(--gray-400);padding:2rem">No new arrivals yet.</p>';
+        document.getElementById('best-sellers').innerHTML =
+          bestRes.products.length ? bestRes.products.map(buildProductCard).join('') :
+          '<p style="grid-column:1/-1;text-align:center;color:var(--gray-400);padding:2rem">No best sellers yet.</p>';
+        document.getElementById('trending-products').innerHTML =
+          trendingRes.products.length ? trendingRes.products.map(buildProductCard).join('') :
+          '<p style="grid-column:1/-1;text-align:center;color:var(--gray-400);padding:2rem">No trending products yet.</p>';
         initReveal();
       } catch(err) {
         const msg = `<p style="grid-column:1/-1;text-align:center;color:var(--gray-400);padding:2rem">Could not load products — make sure the server is running.</p>`;
         document.getElementById('featured-products').innerHTML = msg;
         document.getElementById('new-arrivals').innerHTML = '';
+        document.getElementById('best-sellers').innerHTML = '';
+        document.getElementById('trending-products').innerHTML = '';
       }
     }
 
