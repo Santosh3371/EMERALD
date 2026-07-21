@@ -110,9 +110,12 @@
         ? `<span class="p-price p-price-sale">${formatPrice(p.salePrice)}</span><span class="p-price-was">${formatPrice(p.price)}</span>`
         : `<span class="p-price">${formatPrice(p.price)}</span>`;
 
-      const thumbsHTML = (p.images || []).map((img,i) =>
-        `<div class="thumb ${i===0?'active':''}" onclick="switchImg('${img.url}',this)"><img src="${img.url}" alt="${p.name}" loading="lazy"></div>`
-      ).join('');
+      const thumbsHTML = (p.images || []).map((img,i) => {
+        const thumbUrl = getProductImageUrl(img.url);
+        return `<div class="thumb ${i===0?'active':''}" onclick="switchImg('${thumbUrl}',this)">${renderProductImage(thumbUrl, p.name)}</div>`;
+      }).join('');
+
+      const mainImgSrc = getProductImageUrl(p.images?.[0]?.url);
 
       const sizesHTML = (p.sizes || []).map(s =>
         `<button class="sz-opt" onclick="pickSize(this,'${s}')">${s}</button>`
@@ -134,7 +137,7 @@
       document.getElementById('product-wrap').innerHTML = `
         <div class="gallery">
           <div class="main-img-wrap">
-            <img id="main-img" src="${p.images?.[0]?.url || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600'}" alt="${p.name}">
+            <img id="main-img" src="${mainImgSrc}" alt="${p.name}" onerror="handleImageError(this)">
           </div>
           <div class="thumbs">${thumbsHTML}</div>
         </div>

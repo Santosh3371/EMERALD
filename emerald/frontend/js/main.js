@@ -127,7 +127,52 @@ function initReveal() {
   els.forEach(el => obs.observe(el));
 }
 
-/* ── HELPERS ─────────────────────────────────────────── */
+/* ── HELPERS & PRODUCT IMAGE ENGINE ───────────────────── */
+const DEFAULT_PRODUCT_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='800' viewBox='0 0 600 800'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%2310b981' stop-opacity='0.15'/%3E%3Cstop offset='100%25' stop-color='%23064e3b' stop-opacity='0.25'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='%23f3f4f6'/%3E%3Crect width='100%25' height='100%25' fill='url(%23g)'/%3E%3Cg transform='translate(300,380)' text-anchor='middle'%3E%3Ctext y='0' fill='%23047857' font-family='Playfair Display, Georgia, serif' font-size='32' font-weight='bold' letter-spacing='4'%3EEMERALD%3C/text%3E%3Ctext y='36' fill='%236b7280' font-family='Inter, sans-serif' font-size='14' letter-spacing='2'%3EPREMIUM COLLECTION%3C/text%3E%3C/g%3E%3C/svg%3E";
+
+function handleImageError(imgEl) {
+  if (!imgEl) return;
+  imgEl.onerror = null; // Prevent infinite loop if fallback fails
+  imgEl.src = DEFAULT_PRODUCT_IMAGE;
+  imgEl.classList.add('img-fallback-applied');
+}
+
+function getProductImageUrl(productOrUrl) {
+  let url = '';
+  if (typeof productOrUrl === 'string') {
+    url = productOrUrl;
+  } else if (productOrUrl && Array.isArray(productOrUrl.images) && productOrUrl.images.length > 0) {
+    url = productOrUrl.images[0]?.url || (typeof productOrUrl.images[0] === 'string' ? productOrUrl.images[0] : '');
+  } else if (productOrUrl && productOrUrl.image) {
+    url = typeof productOrUrl.image === 'string' ? productOrUrl.image : productOrUrl.image?.url;
+  }
+
+  if (!url || typeof url !== 'string' || url.trim() === '') {
+    return DEFAULT_PRODUCT_IMAGE;
+  }
+
+  url = url.trim();
+
+  // If relative local upload path, prepend ORIGIN
+  if (url.startsWith('/uploads/') || url.startsWith('uploads/')) {
+    const cleanPath = url.startsWith('/') ? url : `/${url}`;
+    return `${ORIGIN}${cleanPath}`;
+  }
+
+  // Optimize Unsplash links if missing parameters
+  if (url.includes('images.unsplash.com') && !url.includes('auto=format')) {
+    const joiner = url.includes('?') ? '&' : '?';
+    return `${url}${joiner}auto=format&fit=crop&w=600&q=80`;
+  }
+
+  return url;
+}
+
+function renderProductImage(productOrUrl, altText = 'EMERALD Product', extraClasses = '', extraAttrs = '') {
+  const src = getProductImageUrl(productOrUrl);
+  return `<img src="${src}" alt="${altText}" class="${extraClasses}" loading="lazy" onerror="handleImageError(this)" ${extraAttrs}>`;
+}
+
 function formatPrice(price) { return `$${Number(price).toFixed(2)}`; }
 
 function renderStars(rating, numReviews = null) {
@@ -153,13 +198,13 @@ function buildProductCard(product) {
     : product.stock <= 15 
       ? `<span style="font-size:0.7rem;color:#b45309;font-weight:600">Only ${product.stock} left!</span>`
       : `<span style="font-size:0.7rem;color:var(--gray-400)">In Stock (${product.stock})</span>`;
+  const imgHTML = renderProductImage(product, product.name);
   return `
     <article class="product-card reveal">
       <a href="${pagePath}product.html?slug=${product.slug}">
         <div class="product-card-img">
           ${badge}
-          <img src="${product.images[0]?.url || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400'}"
-               alt="${product.name}" loading="lazy">
+          ${imgHTML}
           <div class="product-card-actions">
             <button class="btn btn-primary btn-sm" style="flex:1;border-radius:var(--r-full)"
               onclick="quickAddToCart(event,'${product._id}','${product.slug}')" ${product.stock === 0 ? 'disabled style="opacity:.5"' : ''}>${product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}</button>
@@ -174,7 +219,7 @@ function buildProductCard(product) {
           <span style="font-weight:600;color:var(--emerald-700)">${product.brand || 'EMERALD'}</span>
         </div>
         <h3 class="product-card-name"><a href="${pagePath}product.html?slug=${product.slug}">${product.name}</a></h3>
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.4rem;margin-bottom:0.4rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem;margin-bottom:0.4rem">
           <div class="product-card-price">${price}</div>
           ${product.rating ? renderStars(product.rating, product.numReviews) : ''}
         </div>

@@ -58,7 +58,7 @@
               <thead><tr><th>Product</th><th>Price</th><th>Qty</th><th>Total</th><th></th></tr></thead>
               <tbody>${items.map(it=>`<tr>
                 <td><div style="display:flex;gap:1rem;align-items:center">
-                  <div class="cart-img"><img src="${it.image}" alt="${it.name}" loading="lazy"></div>
+                  <div class="cart-img">${renderProductImage(it.image, it.name)}</div>
                   <div><div class="cart-name"><a href="product.html?slug=${it.slug}">${it.name}</a></div>
                   <div class="cart-meta">Size: ${it.size} · ${it.color}</div></div>
                 </div></td>

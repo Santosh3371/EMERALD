@@ -115,7 +115,7 @@
       document.getElementById('std-price').textContent = ship===0?'Free':formatPrice(ship);
       document.getElementById('co-items').innerHTML = items.map(it=>`
         <div class="checkout-item">
-          <div class="co-img"><img src="${it.image}" alt="${it.name}"><span class="co-badge">${it.quantity}</span></div>
+          <div class="co-img">${renderProductImage(it.image, it.name)}<span class="co-badge">${it.quantity}</span></div>
           <div style="flex:1"><div style="font-weight:600;font-size:.85rem">${it.name}</div><div style="font-size:.72rem;color:var(--gray-400)">${it.size} · ${it.color}</div></div>
           <div style="font-weight:700;font-size:.875rem">${formatPrice(it.price*it.quantity)}</div>
         </div>`).join('');

@@ -3,6 +3,33 @@ const router = express.Router();
 const { protect, adminOnly } = require('../middleware/auth');
 const Product = require('../models/Product');
 
+const CATEGORY_FALLBACK_IMAGES = {
+  women: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=600&q=80',
+  men: 'https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?auto=format&fit=crop&w=600&q=80',
+  accessories: 'https://images.unsplash.com/photo-1601924921557-45e6dea0a157?auto=format&fit=crop&w=600&q=80',
+  footwear: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=600&q=80',
+  bags: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=600&q=80',
+  jewelry: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=600&q=80',
+  default: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=600&q=80'
+};
+
+function sanitizeProduct(doc) {
+  if (!doc) return doc;
+  const product = doc.toObject ? doc.toObject() : { ...doc };
+  const fallback = CATEGORY_FALLBACK_IMAGES[product.category] || CATEGORY_FALLBACK_IMAGES.default;
+
+  if (!Array.isArray(product.images) || product.images.length === 0) {
+    product.images = [{ url: fallback, alt: product.name || 'EMERALD Product' }];
+  } else {
+    product.images = product.images.map(img => {
+      let url = typeof img === 'string' ? img : (img?.url || '');
+      if (!url || typeof url !== 'string' || url.trim() === '') url = fallback;
+      return { url, alt: img?.alt || product.name || 'EMERALD Product' };
+    });
+  }
+  return product;
+}
+
 // GET /api/products
 router.get('/', async (req, res) => {
   try {
@@ -38,7 +65,8 @@ router.get('/', async (req, res) => {
     
     const skip = (Number(page) - 1) * Number(limit);
     const total = await Product.countDocuments(query);
-    const products = await Product.find(query).sort(sortOption).limit(Number(limit)).skip(skip);
+    const rawProducts = await Product.find(query).sort(sortOption).limit(Number(limit)).skip(skip);
+    const products = rawProducts.map(sanitizeProduct);
     
     res.json({ products, total, pages: Math.ceil(total / limit), page: Number(page) });
   } catch (err) {
@@ -51,7 +79,7 @@ router.get('/:slug', async (req, res) => {
   try {
     const product = await Product.findOne({ slug: req.params.slug });
     if (!product) return res.status(404).json({ message: 'Product not found' });
-    res.json(product);
+    res.json(sanitizeProduct(product));
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
