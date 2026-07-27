@@ -13,7 +13,8 @@ const orderSchema = new mongoose.Schema({
     price: Number,
     size: String,
     color: String,
-    quantity: { type: Number, default: 1 }
+    quantity: { type: Number, default: 1 },
+    shopifyVariantId: String
   }],
 
   shippingAddress: {
@@ -40,6 +41,12 @@ const orderSchema = new mongoose.Schema({
   },
   trackingNumber: String,
   notes: String,
+
+  // Dropshipping order forwarding (Shopify -> DSers -> supplier)
+  shopifyOrderId: String,
+  shopifyOrderNumber: String,
+  shopifyPushStatus: { type: String, enum: ['pending', 'pushed', 'failed'], default: 'pending' },
+  shopifyPushError: String,
   createdAt: { type: Date, default: Date.now }
 });
 

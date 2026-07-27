@@ -36,9 +36,42 @@ router.post('/:id/confirm', async (req, res) => {
     const intent = await stripe.paymentIntents.retrieve(paymentIntentId);
     if (intent.status !== 'succeeded') return res.status(400).json({ message: 'Payment not completed' });
     const order = await Order.findByIdAndUpdate(req.params.id, { 'payment.status': 'paid', 'payment.paidAt': new Date(), status: 'processing' }, { new: true });
+
     res.json({ message: 'Order confirmed', order });
+
+    // Forward to Shopify (so DSers picks it up for supplier fulfillment) after
+    // responding to the customer — a Shopify-side failure must never block payment confirmation.
+    pushOrderToShopify(order).catch(() => {});
   } catch(err) { res.status(500).json({ message: err.message }); }
 });
+
+// Best-effort: attach each order item's shopifyVariantId (by matching size+color
+// against the product's synced variants) and push the order into Shopify.
+async function pushOrderToShopify(order) {
+  if (!process.env.SHOPIFY_STORE_DOMAIN || !process.env.SHOPIFY_ACCESS_TOKEN) return;
+  const Order = require('../models/Order');
+  const Product = require('../models/Product');
+  const { createShopifyOrder } = require('../services/shopify');
+
+  try {
+    for (const item of order.items) {
+      const product = await Product.findById(item.product);
+      const variant = product?.variants?.find(v => v.size === item.size && v.color === item.color) || product?.variants?.[0];
+      if (variant) item.shopifyVariantId = variant.shopifyVariantId;
+    }
+
+    const shopifyOrder = await createShopifyOrder(order);
+    await Order.findByIdAndUpdate(order._id, {
+      items: order.items,
+      shopifyOrderId: String(shopifyOrder.id),
+      shopifyOrderNumber: shopifyOrder.name,
+      shopifyPushStatus: 'pushed'
+    });
+  } catch (err) {
+    console.error(`Shopify push failed for order ${order.orderNumber}:`, err.message);
+    await Order.findByIdAndUpdate(order._id, { shopifyPushStatus: 'failed', shopifyPushError: err.message });
+  }
+}
 
 router.get('/my', protect, async (req, res) => {
   if (!global.DB_CONNECTED) return res.json([]);
