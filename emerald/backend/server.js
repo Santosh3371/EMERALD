@@ -87,6 +87,7 @@ app.use('/api/products',   require('./routes/products'));
 app.use('/api/orders',     require('./routes/orders'));
 app.use('/api/newsletter', require('./routes/newsletter'));
 app.use('/api/upload',     require('./routes/upload'));
+app.use('/api/shopify',    require('./routes/shopifyInstall'));
 
 // ─── SERVE FRONTEND ───────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, '../frontend')));
