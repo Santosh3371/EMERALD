@@ -44,7 +44,11 @@ if (hasRealPassword) {
     socketTimeoutMS: 20000,
     connectTimeoutMS: 10000,
   })
-    .then(() => { global.DB_CONNECTED = true; console.log('✅ MongoDB connected'); })
+    .then(() => {
+      global.DB_CONNECTED = true;
+      console.log('✅ MongoDB connected');
+      scheduleShopifySync();
+    })
     .catch(err => {
       console.error('❌ MongoDB error:', err.message);
       console.log('⚠️  Running in DEMO MODE — products served from memory');
@@ -52,6 +56,24 @@ if (hasRealPassword) {
 } else {
   console.log('⚠️  No MongoDB password set — running in DEMO MODE');
   console.log('   Edit .env → replace <db_password> with your Atlas password');
+}
+
+// ─── SHOPIFY PRODUCT SYNC (dropshipping catalog) ──────────────────────────────
+// Only runs if Shopify credentials are configured — safe no-op otherwise.
+function scheduleShopifySync() {
+  if (!process.env.SHOPIFY_STORE_DOMAIN || !process.env.SHOPIFY_ACCESS_TOKEN) return;
+
+  const cron = require('node-cron');
+  const { syncShopifyProducts } = require('./scripts/syncShopifyProducts');
+
+  const run = () => {
+    console.log('🔄 Syncing products from Shopify...');
+    syncShopifyProducts().catch(err => console.error('Shopify sync failed:', err.message));
+  };
+
+  // Every 6 hours
+  cron.schedule('0 */6 * * *', run);
+  run();
 }
 
 // ─── API CONFIG ROUTES ────────────────────────────────────────────────────────
@@ -65,12 +87,15 @@ app.use('/api/products',   require('./routes/products'));
 app.use('/api/orders',     require('./routes/orders'));
 app.use('/api/newsletter', require('./routes/newsletter'));
 app.use('/api/upload',     require('./routes/upload'));
+app.use('/api/shopify',    require('./routes/shopifyInstall'));
 
 // ─── SERVE FRONTEND ───────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, '../frontend')));
 app.get('*', (req, res) => {
   if (!req.path.startsWith('/api'))
     res.sendFile(path.join(__dirname, '../frontend/index.html'));
+  else
+    res.status(404).json({ message: 'Not found' });
 });
 
 // ─── ERROR HANDLER ────────────────────────────────────────────────────────────

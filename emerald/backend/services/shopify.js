@@ -1,0 +1,140 @@
+const axios = require('axios');
+
+const API_VERSION = '2024-01';
+
+function client() {
+  const domain = process.env.SHOPIFY_STORE_DOMAIN;
+  const token = process.env.SHOPIFY_ACCESS_TOKEN;
+  if (!domain || !token) {
+    throw new Error('SHOPIFY_STORE_DOMAIN / SHOPIFY_ACCESS_TOKEN not set in .env');
+  }
+  return axios.create({
+    baseURL: `https://${domain}/admin/api/${API_VERSION}`,
+    headers: {
+      'X-Shopify-Access-Token': token,
+      'Content-Type': 'application/json'
+    },
+    timeout: 20000
+  });
+}
+
+// Shopify product_type / tags -> our storefront nav categories. Anything
+// unrecognized falls back to 'accessories' rather than failing the sync.
+// Expect to tune this once real DSers-imported product_type values are known.
+const CATEGORY_MAP = [
+  { match: /dress|gown|blouse|skirt|jumpsuit|women/i, category: 'women' },
+  { match: /shirt|suit|blazer|men'?s|trouser|chino/i, category: 'men' },
+  { match: /boot|heel|loafer|sneaker|sandal|oxford|shoe|footwear/i, category: 'footwear' },
+  { match: /bag|tote|backpack|clutch|satchel|duffle/i, category: 'bags' },
+  { match: /ring|necklace|earring|bracelet|bangle|jewelry|jewellery/i, category: 'jewelry' },
+  { match: /scarf|belt|sunglass|hat|glove|wallet|tie|accessor/i, category: 'accessories' }
+];
+
+function mapCategory(shopifyProduct) {
+  const haystack = `${shopifyProduct.product_type || ''} ${(shopifyProduct.tags || '')}`;
+  for (const rule of CATEGORY_MAP) {
+    if (rule.match.test(haystack)) return rule.category;
+  }
+  return 'accessories';
+}
+
+function slugify(str) {
+  return String(str).toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+}
+
+function mapShopifyProduct(sp) {
+  const variants = (sp.variants || []).map(v => ({
+    shopifyVariantId: String(v.id),
+    sku: v.sku || '',
+    size: v.option1 || '',
+    color: v.option2 || '',
+    price: Number(v.price),
+    stock: v.inventory_quantity != null ? v.inventory_quantity : 0
+  }));
+
+  const firstVariant = variants[0] || { price: 0, stock: 0 };
+  const sizes = [...new Set(variants.map(v => v.size).filter(Boolean))];
+  const colors = [...new Set(variants.map(v => v.color).filter(Boolean))].map(name => ({ name, hex: '' }));
+
+  return {
+    name: sp.title,
+    slug: `${slugify(sp.title)}-${sp.id}`,
+    description: (sp.body_html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() || sp.title,
+    shortDescription: sp.title,
+    price: firstVariant.price,
+    salePrice: null,
+    category: mapCategory(sp),
+    brand: sp.vendor || 'EMERALD',
+    tags: (sp.tags || '').split(',').map(t => t.trim()).filter(Boolean),
+    images: (sp.images || []).map(img => ({ url: img.src, alt: sp.title })),
+    sizes,
+    colors,
+    stock: variants.reduce((sum, v) => sum + (v.stock || 0), 0),
+    sku: firstVariant.sku || `SHOPIFY-${sp.id}`,
+    source: 'shopify',
+    shopifyProductId: String(sp.id),
+    shopifyHandle: sp.handle,
+    variants
+  };
+}
+
+// Fetch every product from Shopify, following cursor-based pagination.
+async function fetchAllProducts() {
+  const http = client();
+  const all = [];
+  let pageInfo = null;
+
+  do {
+    const params = pageInfo
+      ? { limit: 250, page_info: pageInfo }
+      : { limit: 250 };
+    const res = await http.get('/products.json', { params });
+    all.push(...res.data.products);
+
+    const link = res.headers.link || res.headers.Link;
+    const nextMatch = link && link.match(/<[^>]*[?&]page_info=([^&>]+)[^>]*>;\s*rel="next"/);
+    pageInfo = nextMatch ? nextMatch[1] : null;
+  } while (pageInfo);
+
+  return all.map(mapShopifyProduct);
+}
+
+// Push a paid EMERALD order into Shopify so DSers picks it up for supplier fulfillment.
+async function createShopifyOrder(order) {
+  const http = client();
+
+  const line_items = order.items.map(item => {
+    if (!item.shopifyVariantId) {
+      throw new Error(`Order item "${item.name}" has no shopifyVariantId — cannot forward to Shopify`);
+    }
+    return { variant_id: Number(item.shopifyVariantId), quantity: item.quantity };
+  });
+
+  const addr = order.shippingAddress || {};
+  const [firstName, ...rest] = (addr.fullName || '').split(' ');
+
+  const payload = {
+    order: {
+      line_items,
+      email: order.guestEmail || undefined,
+      financial_status: 'paid',
+      shipping_address: {
+        first_name: firstName || addr.fullName || '',
+        last_name: rest.join(' ') || '',
+        address1: addr.street,
+        city: addr.city,
+        province: addr.state,
+        zip: addr.zip,
+        country: addr.country,
+        phone: addr.phone
+      },
+      note: `EMERALD order ${order.orderNumber}`,
+      tags: 'emerald-storefront'
+    }
+  };
+
+  const res = await http.post('/orders.json', payload);
+  return res.data.order;
+}
+
+module.exports = { fetchAllProducts, mapShopifyProduct, createShopifyOrder, mapCategory };

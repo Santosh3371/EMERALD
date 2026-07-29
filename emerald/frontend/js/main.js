@@ -49,6 +49,8 @@ const Auth = {
     const user = Auth.getUser();
     document.querySelectorAll('.nav-login').forEach(el => el.style.display = user ? 'none' : '');
     document.querySelectorAll('.nav-account').forEach(el => el.style.display = user ? '' : 'none');
+    document.querySelectorAll('.nav-account-name').forEach(el => el.textContent = user ? user.name : '');
+    document.querySelectorAll('.nav-account-email').forEach(el => el.textContent = user ? user.email : '');
   },
   headers() {
     const h = { 'Content-Type': 'application/json' };
@@ -116,6 +118,15 @@ function initNavbar() {
   Cart.updateBadge();
   Auth.updateNav();
 }
+
+function toggleAccountMenu(e) {
+  e.stopPropagation();
+  document.querySelector('.nav-account')?.classList.toggle('open');
+}
+document.addEventListener('click', (e) => {
+  const wrap = document.querySelector('.nav-account');
+  if (wrap && wrap.classList.contains('open') && !wrap.contains(e.target)) wrap.classList.remove('open');
+});
 
 /* ── SCROLL REVEAL ───────────────────────────────────── */
 function initReveal() {
@@ -269,9 +280,21 @@ const NAVBAR_HTML = `
       <a href="<<BASE>>pages/account.html" class="nav-icon nav-login" title="Sign In">
         <svg width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       </a>
-      <span class="nav-icon nav-account" style="display:none;cursor:pointer" onclick="Auth.logout()" title="Sign Out">
-        <svg width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      </span>
+      <div class="nav-account" style="display:none;position:relative">
+        <button class="nav-icon nav-account-toggle" title="Account" aria-label="Account menu" onclick="toggleAccountMenu(event)">
+          <svg width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </button>
+        <div class="nav-account-menu">
+          <div class="nav-account-header">
+            <div class="nav-account-name">—</div>
+            <div class="nav-account-email">—</div>
+          </div>
+          <a href="<<BASE>>pages/account.html#orders">📦 My Orders</a>
+          <a href="<<BASE>>pages/account.html#profile">👤 Profile</a>
+          <a href="<<BASE>>pages/account.html#wishlist">♡ Wishlist</a>
+          <a href="#" onclick="Auth.logout()" class="nav-account-signout">↩ Sign Out</a>
+        </div>
+      </div>
       <a href="<<BASE>>pages/cart.html" class="nav-icon" style="position:relative" title="Cart">
         <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
         <span class="cart-badge" style="display:none">0</span>

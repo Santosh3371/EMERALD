@@ -191,7 +191,9 @@
         document.getElementById('d-email').textContent=u.email;
         document.getElementById('p-name').value=u.name;
         document.getElementById('p-email').value=u.email;
-        loadOrders();
+        const panel = ['orders','profile','wishlist'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'orders';
+        const navLink = Array.from(document.querySelectorAll('.dash-nav a')).find(a => a.getAttribute('onclick')?.includes(`'${panel}'`));
+        showPanel(panel, navLink);
       } else {
         document.getElementById('auth-section').style.display='';
         document.getElementById('dash-section').style.display='none';
