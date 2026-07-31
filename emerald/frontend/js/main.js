@@ -97,7 +97,10 @@ function initNavbar() {
   const isHome = window.location.pathname === '/' || window.location.pathname.endsWith('index.html');
 
   const update = () => {
-    const scrolled = window.scrollY > 60;
+    // Hero-mode (transparent, white text) only makes sense over the homepage's
+    // dark hero image. Every other page always shows the solid navbar so text
+    // doesn't disappear into whatever's at the top of that page.
+    const scrolled = !isHome || window.scrollY > 60;
     navbar.classList.toggle('scrolled', scrolled);
     navbar.classList.toggle('hero-mode', !scrolled);
   };
