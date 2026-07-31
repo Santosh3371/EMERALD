@@ -272,8 +272,6 @@ const NAVBAR_HTML = `
     <ul class="nav-links">
       <li><a href="<<BASE>>">Home</a></li>
       <li><a href="<<BASE>>pages/shop.html">Shop</a></li>
-      <li><a href="<<BASE>>pages/about.html">About</a></li>
-      <li><a href="<<BASE>>pages/blog.html">Blog</a></li>
       <li><a href="<<BASE>>pages/contact.html">Contact</a></li>
     </ul>
     <div class="nav-actions">
@@ -346,8 +344,6 @@ const FOOTER_HTML = `
         <li><a href="#">FAQ</a></li>
       </ul></div>
       <div class="footer-col"><h4>Company</h4><ul>
-        <li><a href="<<BASE>>pages/about.html">About Us</a></li>
-        <li><a href="<<BASE>>pages/blog.html">Blog</a></li>
         <li><a href="#">Sustainability</a></li>
         <li><a href="#">Careers</a></li>
         <li><a href="#">Press</a></li>
