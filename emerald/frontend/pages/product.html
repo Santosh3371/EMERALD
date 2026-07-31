@@ -11,7 +11,12 @@
        thumbnail strip (see .thumbs below) can force this column wider than
        its intended half regardless of the "1fr 1fr" declaration. minmax(0,..)
        removes that content-driven minimum entirely. */
-    .product-layout { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 4rem; padding: 3rem 0 5rem; position:relative;z-index:1; }
+    /* Top padding must clear the fixed navbar's rendered height (~69px) —
+       3rem (48px) didn't, so the top of the gallery rendered underneath it.
+       Every other inner page (.page-header, style.css) already uses 8rem
+       for exactly this reason; matching that instead of picking a new
+       number so this can't drift out of sync again. */
+    .product-layout { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 4rem; padding: 8rem 0 5rem; position:relative;z-index:1; }
     /* Gallery */
     .gallery { position: sticky; top: 84px; }
     /* aspect-ratio sizes the box off column width alone, which on a 50/50
