@@ -5,17 +5,36 @@
   <title>Product — EMERALD</title>
   <link rel="stylesheet" href="../css/style.css">
   <style>
-    .product-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; padding: 3rem 0 5rem; position:relative;z-index:1; }
+    /* minmax(0,1fr) — NOT plain 1fr — is required for a true 50/50 split.
+       Plain "1fr" is shorthand for minmax(auto,1fr): each track's minimum
+       width is its content's min-content size, so a wide non-wrapping
+       thumbnail strip (see .thumbs below) can force this column wider than
+       its intended half regardless of the "1fr 1fr" declaration. minmax(0,..)
+       removes that content-driven minimum entirely. */
+    .product-layout { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 4rem; padding: 3rem 0 5rem; position:relative;z-index:1; }
     /* Gallery */
     .gallery { position: sticky; top: 84px; }
     /* aspect-ratio sizes the box off column width alone, which on a 50/50
        desktop grid can exceed viewport height; max-height keeps it in view
-       regardless of screen size, while object-fit:cover on the <img> still
-       crops any source image (portrait or landscape) to fill it cleanly. */
-    .main-img-wrap { border-radius: var(--r-xl); overflow: hidden; aspect-ratio: 3/4; max-height: 78vh; background: var(--gray-100); margin-bottom: .875rem; box-shadow: 0 12px 48px rgba(0,0,0,0.1); }
+       regardless of screen size. 78vh technically fit but still read as
+       "the image dominates the page" on real screens, so this is capped to
+       a fixed value matching typical e-commerce gallery heights (~600px),
+       falling back to a smaller vh-based bound only on short viewports.
+       object-fit:cover on the <img> still crops any source image (portrait
+       or landscape) to fill the box cleanly, no stretching either way.
+
+       width:100% is required here: without it, the browser resolves
+       aspect-ratio from the *capped* height instead of the grid column,
+       shrinking the box's width along with its height (measured: capped
+       height alone dropped width to 35% of the container). Pinning width
+       to the grid column keeps aspect-ratio governing height only. */
+    .main-img-wrap { width: 100%; border-radius: var(--r-xl); overflow: hidden; aspect-ratio: 3/4; max-height: min(600px, 65vh); background: var(--gray-100); margin-bottom: .875rem; box-shadow: 0 12px 48px rgba(0,0,0,0.1); }
     .main-img-wrap img { width:100%;height:100%;object-fit:cover;transition:transform .5s var(--ease); }
     .main-img-wrap:hover img { transform:scale(1.04); }
-    .thumbs { display:flex;gap:.625rem; }
+    /* flex-wrap:wrap so products with many images (thumbnails are
+       flex-shrink:0, fixed 70px) drop to additional rows instead of forcing
+       their non-wrapping min-content width onto the parent grid column. */
+    .thumbs { display:flex;flex-wrap:wrap;gap:.625rem; }
     .thumb { width:70px;height:88px;border-radius:var(--r-md);overflow:hidden;cursor:pointer;border:2px solid transparent;transition:all .2s;background:var(--gray-100); flex-shrink:0; }
     .thumb.active { border-color:var(--emerald-600);box-shadow:0 0 0 2px var(--emerald-100); }
     .thumb img { width:100%;height:100%;object-fit:cover; }
