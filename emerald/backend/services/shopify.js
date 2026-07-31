@@ -42,6 +42,41 @@ function slugify(str) {
   return String(str).toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 }
 
+// AliExpress-sourced listings typically bury real marketing copy between a
+// leading key:value spec dump ("Brand Name: NONE Certification: CPNP...")
+// and a trailing one ("Product Details: Net Weight..."/fake Q&A/emoji tip
+// spam). The genuine copy in between is usually marked by an emoji bullet
+// (🌟 ✨ etc.) — a common convention across these listings, not specific to
+// one product — so find that instead of just truncating from byte zero,
+// then still hard-cap length as a safety net for listings that don't
+// follow this pattern at all.
+function cleanDescription(html, maxLen = 400) {
+  let text = String(html || '').replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+
+  // Marketing copy start markers seen across different supplier listing
+  // templates: an emoji bullet (🌟 ✨), a "Features:" label, or fullwidth
+  // 【bracket】 bullets (common in listings translated from Chinese).
+  const marketingMarker = /(?:[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}])|(?:\bFeatures\s*:\s*)|(?:【)/u;
+  const startMatch = text.match(marketingMarker);
+  if (startMatch && startMatch.index < 600) {
+    text = text.slice(startMatch.index + startMatch[0].length)
+      .replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}【】\s]+/u, '')
+      .trim();
+  }
+
+  const trailingJunkMarker = /\b(Product Details:|Net Weight:|Package Includes:|SPECIFICATIONS?|Q:|FAQ:|Warm Tip)\b/i;
+  const cut = text.match(trailingJunkMarker);
+  if (cut && cut.index > 40) text = text.slice(0, cut.index).trim();
+
+  if (text.length > maxLen) {
+    text = text.slice(0, maxLen);
+    const lastSpace = text.lastIndexOf(' ');
+    if (lastSpace > maxLen * 0.6) text = text.slice(0, lastSpace);
+    text = text.trim() + '…';
+  }
+  return text;
+}
+
 function mapShopifyProduct(sp) {
   const variants = (sp.variants || []).map(v => ({
     shopifyVariantId: String(v.id),
@@ -59,7 +94,7 @@ function mapShopifyProduct(sp) {
   return {
     name: sp.title,
     slug: `${slugify(sp.title)}-${sp.id}`,
-    description: (sp.body_html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() || sp.title,
+    description: cleanDescription(sp.body_html) || sp.title,
     shortDescription: sp.title,
     price: firstVariant.price,
     salePrice: null,
