@@ -20,18 +20,30 @@ function client() {
 
 // Shopify product_type / tags -> our storefront nav categories. Anything
 // unrecognized falls back to 'accessories' rather than failing the sync.
-// Expect to tune this once real DSers-imported product_type values are known.
+//
+// DSers-imported products consistently leave product_type and tags EMPTY —
+// verified against all 12 live products, 0/12 had either field populated —
+// so title is the only field that actually carries category signal, and
+// must be included in the match haystack or every product falls through
+// to the 'accessories' fallback regardless of what it actually is.
+//
+// Order matters: unambiguous product-type words (shoes, bags, jewelry) are
+// checked before the broader women/men clothing words, since a title can
+// contain both (e.g. "Men's ... Patent Leather Shoes" must resolve to
+// footwear, not "men" clothing — it would with the reverse order, since
+// "Men's" appears in that title too). Regexes use \b word boundaries so
+// bare "Men"/"Women" (no trailing 's) still match, not just "Men's".
 const CATEGORY_MAP = [
-  { match: /dress|gown|blouse|skirt|jumpsuit|women/i, category: 'women' },
-  { match: /shirt|suit|blazer|men'?s|trouser|chino/i, category: 'men' },
-  { match: /boot|heel|loafer|sneaker|sandal|oxford|shoe|footwear/i, category: 'footwear' },
-  { match: /bag|tote|backpack|clutch|satchel|duffle/i, category: 'bags' },
-  { match: /ring|necklace|earring|bracelet|bangle|jewelry|jewellery/i, category: 'jewelry' },
-  { match: /scarf|belt|sunglass|hat|glove|wallet|tie|accessor/i, category: 'accessories' }
+  { match: /\b(boots?|heels?|loafers?|sneakers?|sandals?|oxfords?|shoes?|footwear)\b/i, category: 'footwear' },
+  { match: /\b(bag|tote|backpack|clutch|satchel|duffle)\b/i, category: 'bags' },
+  { match: /\b(rings?|necklaces?|earrings?|bracelets?|bangles?|jewel(le)?ry)\b/i, category: 'jewelry' },
+  { match: /\b(scarf|belts?|sunglass(es)?|hats?|gloves?|wallets?|ties?|accessor\w*)\b/i, category: 'accessories' },
+  { match: /\b(dress|gown|blouse|skirt|jumpsuit|women'?s?|lady|ladies)\b/i, category: 'women' },
+  { match: /\b(shirts?|t-?shirts?|suits?|blazers?|men'?s?|trousers?|chinos?|jackets?|sweaters?|pullovers?|jumpers?|hoodies?|polos?|coats?)\b/i, category: 'men' }
 ];
 
 function mapCategory(shopifyProduct) {
-  const haystack = `${shopifyProduct.product_type || ''} ${(shopifyProduct.tags || '')}`;
+  const haystack = `${shopifyProduct.product_type || ''} ${shopifyProduct.tags || ''} ${shopifyProduct.title || ''}`;
   for (const rule of CATEGORY_MAP) {
     if (rule.match.test(haystack)) return rule.category;
   }
@@ -105,7 +117,12 @@ function mapShopifyProduct(sp) {
     sizes,
     colors,
     stock: variants.reduce((sum, v) => sum + (v.stock || 0), 0),
-    sku: firstVariant.sku || `SHOPIFY-${sp.id}`,
+    // Supplier-provided SKUs aren't guaranteed unique across different
+    // Shopify products (confirmed live: two distinct products shared the
+    // identical SKU string, which crashed the sync against our schema's
+    // unique index). Suffixing with the Shopify product id — always unique
+    // — guarantees no collision while keeping the original SKU visible.
+    sku: firstVariant.sku ? `${firstVariant.sku}-${sp.id}` : `SHOPIFY-${sp.id}`,
     source: 'shopify',
     shopifyProductId: String(sp.id),
     shopifyHandle: sp.handle,
