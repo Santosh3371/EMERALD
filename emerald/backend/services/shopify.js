@@ -89,12 +89,33 @@ function cleanDescription(html, maxLen = 400) {
   return text;
 }
 
+// Shopify does NOT guarantee option1=size/option2=color — each product
+// defines its own option names/order, and DSers-imported products don't
+// follow a consistent one. Verified against all 14 live products: most are
+// "1:Color, 2:Size" — the reverse of a size/color-by-position assumption —
+// and some don't have a real size dimension at all (single "Color" option),
+// or a second option that isn't a size (e.g. "Ships From", "Color
+// Temperature"). Reading each product's actual option names and locating
+// the matching optionN field is the only correct approach; hardcoding
+// position silently swapped size/color on nearly every product.
+function findOptionPosition(options, matcher) {
+  const opt = (options || []).find(o => matcher(String(o.name || '').trim()));
+  return opt ? opt.position : null;
+}
+const isSizeOptionName = name => /size/i.test(name);
+// "Color Temperature" contains "Color" but isn't a color (seen on the wall
+// lamp's second option) — exclude it explicitly rather than false-matching.
+const isColorOptionName = name => /colou?r/i.test(name) && !/temperature/i.test(name);
+
 function mapShopifyProduct(sp) {
+  const sizePos = findOptionPosition(sp.options, isSizeOptionName);
+  const colorPos = findOptionPosition(sp.options, isColorOptionName);
+
   const variants = (sp.variants || []).map(v => ({
     shopifyVariantId: String(v.id),
     sku: v.sku || '',
-    size: v.option1 || '',
-    color: v.option2 || '',
+    size: sizePos ? (v[`option${sizePos}`] || '') : '',
+    color: colorPos ? (v[`option${colorPos}`] || '') : '',
     price: Number(v.price),
     stock: v.inventory_quantity != null ? v.inventory_quantity : 0
   }));
