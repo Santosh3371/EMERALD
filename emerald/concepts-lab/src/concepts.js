@@ -29,4 +29,3 @@ export function queueEventLoopExample(onEvent) {
   window.setTimeout(() => onEvent('Timer callback: runs after microtasks'), 0);
   onEvent('Synchronous: end');
 }
-
