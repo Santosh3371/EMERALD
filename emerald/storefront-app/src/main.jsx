@@ -6,7 +6,7 @@ import './styles.css';
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <BrowserRouter basename="/concepts-lab">
+    <BrowserRouter basename="/storefront">
       <App />
     </BrowserRouter>
   </React.StrictMode>

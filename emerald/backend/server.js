@@ -90,10 +90,10 @@ app.use('/api/upload',     require('./routes/upload'));
 app.use('/api/shopify',    require('./routes/shopifyInstall'));
 
 // ─── SERVE FRONTEND ───────────────────────────────────────────────────────────
-const conceptsLabPath = path.join(__dirname, '../frontend/concepts-lab');
-app.use('/concepts-lab', express.static(conceptsLabPath));
-app.get('/concepts-lab/*', (req, res, next) => {
-  res.sendFile(path.join(conceptsLabPath, 'index.html'), (err) => {
+const storefrontPath = path.join(__dirname, '../frontend/storefront');
+app.use('/storefront', express.static(storefrontPath));
+app.get('/storefront/*', (req, res, next) => {
+  res.sendFile(path.join(storefrontPath, 'index.html'), (err) => {
     if (err) next(err);
   });
 });

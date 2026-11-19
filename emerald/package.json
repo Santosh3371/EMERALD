@@ -6,8 +6,8 @@
   "scripts": {
     "start": "node backend/server.js",
     "dev": "nodemon backend/server.js",
-    "concepts:dev": "vite --config concepts-lab/vite.config.js",
-    "concepts:build": "vite build --config concepts-lab/vite.config.js",
+    "storefront:dev": "vite --config storefront-app/vite.config.js",
+    "storefront:build": "vite build --config storefront-app/vite.config.js",
     "seed": "node seed/products.js",
     "sync:shopify": "node backend/scripts/syncShopifyProducts.js"
   },

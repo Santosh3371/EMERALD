@@ -3,7 +3,7 @@ const { defineConfig } = require('vite');
 
 module.exports = defineConfig({
   root: __dirname,
-  base: '/concepts-lab/',
+  base: '/storefront/',
   plugins: [{
     name: 'normalize-built-html-line-endings',
     enforce: 'post',
@@ -18,7 +18,7 @@ module.exports = defineConfig({
     }
   }],
   build: {
-    outDir: path.resolve(__dirname, '../frontend/concepts-lab'),
+    outDir: path.resolve(__dirname, '../frontend/storefront'),
     emptyOutDir: true
   }
 });
