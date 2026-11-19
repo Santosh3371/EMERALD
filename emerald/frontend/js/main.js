@@ -8,35 +8,44 @@ const ORIGIN = window.location.protocol === 'file:'
 const API = `${ORIGIN}/api`;
 const PAGE_BASE = window.location.pathname.includes('/pages/') ? '../' : './';
 const APP_ROOT = window.location.protocol === 'file:' ? `${PAGE_BASE}index.html` : '/';
+const SHOP_PATH = getShopPath();
+
+function getShopPath() {
+  return window.location.protocol === 'file:' ? `${PAGE_BASE}pages/shop.html` : '/storefront/';
+}
 
 /* ── CART ────────────────────────────────────────────── */
-const Cart = {
-  get()  { return JSON.parse(localStorage.getItem('emerald_cart') || '[]'); },
-  save(items) { localStorage.setItem('emerald_cart', JSON.stringify(items)); Cart.updateBadge(); },
-  add(product, size, color, qty = 1) {
-    const items = Cart.get();
-    const key = `${product._id}-${size}-${color}`;
-    const existing = items.find(i => `${i.productId}-${i.size}-${i.color}` === key);
-    if (existing) existing.quantity += qty;
-    else items.push({ productId: product._id, name: product.name, image: product.images[0]?.url || '', price: product.salePrice || product.price, size, color, quantity: qty, slug: product.slug });
-    Cart.save(items);
-    Toast.show(`${product.name} added to cart ✓`, 'success');
-  },
-  remove(productId, size, color) { Cart.save(Cart.get().filter(i => !(i.productId===productId && i.size===size && i.color===color))); },
-  updateQty(productId, size, color, qty) {
-    if (parseInt(qty) <= 0) return Cart.remove(productId, size, color);
-    const items = Cart.get();
-    const item = items.find(i => i.productId===productId && i.size===size && i.color===color);
-    if (item) { item.quantity = parseInt(qty); Cart.save(items); }
-  },
-  total()  { return Cart.get().reduce((s,i) => s + i.price * i.quantity, 0); },
-  count()  { return Cart.get().reduce((s,i) => s + i.quantity, 0); },
-  clear()  { localStorage.removeItem('emerald_cart'); Cart.updateBadge(); },
-  updateBadge() {
-    const c = Cart.count();
-    document.querySelectorAll('.cart-badge').forEach(b => { b.textContent = c; b.style.display = c > 0 ? 'flex' : 'none'; });
-  }
-};
+const Cart = (() => {
+  const storageKey = 'emerald_cart';
+
+  return {
+    get()  { return JSON.parse(localStorage.getItem(storageKey) || '[]'); },
+    save(items) { localStorage.setItem(storageKey, JSON.stringify(items)); Cart.updateBadge(); },
+    add(product, size, color, qty = 1) {
+      const items = Cart.get();
+      const key = `${product._id}-${size}-${color}`;
+      const existing = items.find(i => `${i.productId}-${i.size}-${i.color}` === key);
+      if (existing) existing.quantity += qty;
+      else items.push({ productId: product._id, name: product.name, image: product.images[0]?.url || '', price: product.salePrice || product.price, size, color, quantity: qty, slug: product.slug });
+      Cart.save(items);
+      Toast.show(`${product.name} added to cart ✓`, 'success');
+    },
+    remove(productId, size, color) { Cart.save(Cart.get().filter(i => !(i.productId===productId && i.size===size && i.color===color))); },
+    updateQty(productId, size, color, qty) {
+      if (parseInt(qty) <= 0) return Cart.remove(productId, size, color);
+      const items = Cart.get();
+      const item = items.find(i => i.productId===productId && i.size===size && i.color===color);
+      if (item) { item.quantity = parseInt(qty); Cart.save(items); }
+    },
+    total()  { return Cart.get().reduce((s,i) => s + i.price * i.quantity, 0); },
+    count()  { return Cart.get().reduce((s,i) => s + i.quantity, 0); },
+    clear()  { localStorage.removeItem(storageKey); Cart.updateBadge(); },
+    updateBadge() {
+      const c = Cart.count();
+      document.querySelectorAll('.cart-badge').forEach(b => { b.textContent = c; b.style.display = c > 0 ? 'flex' : 'none'; });
+    }
+  };
+})();
 
 /* ── AUTH ────────────────────────────────────────────── */
 const Auth = {
@@ -274,7 +283,7 @@ const NAVBAR_HTML = `
     <a href="<<BASE>>" class="nav-logo">EMERALD</a>
     <ul class="nav-links">
       <li><a href="<<BASE>>">Home</a></li>
-      <li><a href="<<BASE>>pages/shop.html">Shop</a></li>
+      <li><a href="<<SHOP>>">Shop</a></li>
       <li><a href="<<BASE>>pages/contact.html">Contact</a></li>
     </ul>
     <div class="nav-actions">
@@ -332,12 +341,12 @@ const FOOTER_HTML = `
         </div>
       </div>
       <div class="footer-col"><h4>Shop</h4><ul>
-        <li><a href="<<BASE>>pages/shop.html?category=women">Women</a></li>
-        <li><a href="<<BASE>>pages/shop.html?category=men">Men</a></li>
-        <li><a href="<<BASE>>pages/shop.html?category=accessories">Accessories</a></li>
-        <li><a href="<<BASE>>pages/shop.html?category=footwear">Footwear</a></li>
-        <li><a href="<<BASE>>pages/shop.html?category=bags">Bags</a></li>
-        <li><a href="<<BASE>>pages/shop.html?category=jewelry">Jewelry</a></li>
+        <li><a href="<<SHOP>>?category=women">Women</a></li>
+        <li><a href="<<SHOP>>?category=men">Men</a></li>
+        <li><a href="<<SHOP>>?category=accessories">Accessories</a></li>
+        <li><a href="<<SHOP>>?category=footwear">Footwear</a></li>
+        <li><a href="<<SHOP>>?category=bags">Bags</a></li>
+        <li><a href="<<SHOP>>?category=jewelry">Jewelry</a></li>
       </ul></div>
       <div class="footer-col"><h4>Help</h4><ul>
         <li><a href="<<BASE>>pages/contact.html">Contact Us</a></li>
@@ -364,8 +373,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const navHolder    = document.getElementById('navbar');
   const footerHolder = document.getElementById('footer');
   const base = PAGE_BASE;
-  if (navHolder)    navHolder.innerHTML    = NAVBAR_HTML.replace(/<<BASE>>/g, base);
-  if (footerHolder) footerHolder.innerHTML = FOOTER_HTML.replace(/<<BASE>>/g, base);
+  if (navHolder)    navHolder.innerHTML    = NAVBAR_HTML.replace(/<<BASE>>/g, base).replace(/<<SHOP>>/g, SHOP_PATH);
+  if (footerHolder) footerHolder.innerHTML = FOOTER_HTML.replace(/<<BASE>>/g, base).replace(/<<SHOP>>/g, SHOP_PATH);
+  document.querySelectorAll('a[href^="pages/shop.html"]').forEach(link => {
+    const query = link.getAttribute('href').split('?')[1];
+    link.href = `${SHOP_PATH}${query ? `?${query}` : ''}`;
+  });
   initNavbar();
   initReveal();
   initNewsletterForms();

@@ -90,6 +90,13 @@ app.use('/api/upload',     require('./routes/upload'));
 app.use('/api/shopify',    require('./routes/shopifyInstall'));
 
 // ─── SERVE FRONTEND ───────────────────────────────────────────────────────────
+const storefrontPath = path.join(__dirname, '../frontend/storefront');
+app.use('/storefront', express.static(storefrontPath));
+app.get('/storefront/*', (req, res, next) => {
+  res.sendFile(path.join(storefrontPath, 'index.html'), (err) => {
+    if (err) next(err);
+  });
+});
 app.use(express.static(path.join(__dirname, '../frontend')));
 app.get('*', (req, res) => {
   if (!req.path.startsWith('/api'))
