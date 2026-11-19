@@ -4,6 +4,7 @@ import {
   Navigate,
   Route,
   Routes,
+  useLocation,
   useParams,
   useSearchParams
 } from 'react-router-dom';
@@ -79,6 +80,7 @@ function StoreHeader({ cartCount }) {
       <Link className="store-brand" to="/">EMERALD</Link>
       <nav aria-label="Store navigation">
         <Link to="/">Shop</Link>
+        <Link to="/concepts">Concepts in Practice</Link>
         <a href="/pages/cart.html">Cart <span className="store-cart-count">{cartCount}</span></a>
         <a href="/">Home</a>
       </nav>
@@ -327,6 +329,134 @@ function CatalogPage({ cartCount, setCartCount }) {
   );
 }
 
+function ConceptsPage() {
+  const location = useLocation();
+  const [incrementClosure] = useState(() => {
+    let count = 0;
+    return () => ++count;
+  });
+  const [closureCount, setClosureCount] = useState(0);
+  const [eventLog, setEventLog] = useState([]);
+  const [promiseStatus, setPromiseStatus] = useState('Ready to run');
+  const [effectCount, setEffectCount] = useState(0);
+  const [effectMessage, setEffectMessage] = useState('Waiting for the first effect');
+
+  useEffect(() => {
+    setEffectMessage(`Effect ran after the count changed to ${effectCount}.`);
+  }, [effectCount]);
+
+  const hoistingMessage = getHoistedMessage();
+  function getHoistedMessage() {
+    return 'This message is returned by a function declaration called before its definition.';
+  }
+
+  function runEventLoopExample() {
+    const steps = ['1. Synchronous handler started'];
+    setEventLog([...steps]);
+
+    Promise.resolve().then(() => {
+      steps.push('3. Promise microtask ran');
+      setEventLog([...steps]);
+    });
+
+    window.setTimeout(() => {
+      steps.push('4. Timer task ran');
+      setEventLog([...steps]);
+    }, 0);
+
+    steps.push('2. Synchronous handler finished');
+    setEventLog([...steps]);
+  }
+
+  function runPromiseExample() {
+    setPromiseStatus('Pending…');
+    new Promise(resolve => {
+      window.setTimeout(() => resolve('Promise resolved; .then() callback ran.'), 300);
+    })
+      .then(message => setPromiseStatus(message))
+      .catch(error => setPromiseStatus(`Promise rejected: ${error.message}`))
+      .finally(() => window.setTimeout(() => {
+        setPromiseStatus(current => `${current} .finally() ran.`);
+      }, 0));
+  }
+
+  return (
+    <section className="concepts-page">
+      <header className="concepts-hero">
+        <p className="store-eyebrow">EMERALD STOREFRONT</p>
+        <h1>Concepts in Practice</h1>
+        <p>These are working examples inside the storefront. Try the controls; none of them needs product data or a database.</p>
+        <output className="concept-route">Client-side route: {location.pathname}</output>
+      </header>
+
+      <div className="concept-grid">
+        <article className="concept-card">
+          <p className="concept-number">01 · JavaScript</p>
+          <h2>Closure</h2>
+          <p>The cart handler in this store captures the product and cart updater. This counter also retains its private count between clicks.</p>
+          <pre><code>{'let count = 0; return () => ++count;'}</code></pre>
+          <button className="store-button" onClick={() => setClosureCount(incrementClosure())} type="button">
+            Run closure ({closureCount})
+          </button>
+        </article>
+
+        <article className="concept-card">
+          <p className="concept-number">02 · JavaScript</p>
+          <h2>Hoisting</h2>
+          <p>{hoistingMessage}</p>
+          <pre><code>{'const message = getMessage();\nfunction getMessage() { return \"Ready\"; }'}</code></pre>
+        </article>
+
+        <article className="concept-card">
+          <p className="concept-number">03 · JavaScript</p>
+          <h2>Event loop</h2>
+          <p>Run synchronous work, a Promise microtask, and a timer task. The output shows their execution order.</p>
+          <button className="store-button" onClick={runEventLoopExample} type="button">Run event loop</button>
+          <ol className="concept-output" aria-live="polite">
+            {eventLog.map(step => <li key={step}>{step}</li>)}
+          </ol>
+        </article>
+
+        <article className="concept-card">
+          <p className="concept-number">04 · JavaScript</p>
+          <h2>Promises and callbacks</h2>
+          <p>This local asynchronous example runs a Promise executor and its <code>.then()</code>, <code>.catch()</code>, and <code>.finally()</code> callbacks.</p>
+          <button className="store-button" onClick={runPromiseExample} type="button">Run Promise</button>
+          <output className="concept-output" aria-live="polite">{promiseStatus}</output>
+        </article>
+
+        <article className="concept-card">
+          <p className="concept-number">05 · React</p>
+          <h2>useState and useEffect</h2>
+          <p><code>useState</code> stores this counter. <code>useEffect</code> runs when its value changes.</p>
+          <button className="store-button" onClick={() => setEffectCount(value => value + 1)} type="button">
+            Increment state ({effectCount})
+          </button>
+          <output className="concept-output" aria-live="polite">{effectMessage}</output>
+        </article>
+
+        <article className="concept-card">
+          <p className="concept-number">06 · React Router</p>
+          <h2>Client-side routing</h2>
+          <p>This page is the <code>/concepts</code> route. Navigation changes the view without reloading the storefront.</p>
+          <Link className="store-button concept-link-button" to="/">Return to the shop</Link>
+        </article>
+
+        <article className="concept-card concept-sql">
+          <p className="concept-number">07 · SQL</p>
+          <h2>JOIN examples</h2>
+          <p>These relational SQL examples are included as requested; they are illustrative and do not require a database connection.</p>
+          <h3>INNER JOIN</h3>
+          <pre><code>{'SELECT users.name, orders.order_number\nFROM users\nINNER JOIN orders ON orders.user_id = users.id;'}</code></pre>
+          <h3>LEFT JOIN</h3>
+          <pre><code>{'SELECT users.name, orders.order_number\nFROM users\nLEFT JOIN orders ON orders.user_id = users.id;'}</code></pre>
+          <p>Full examples: <code>emerald/sql/joins.sql</code></p>
+        </article>
+      </div>
+    </section>
+  );
+}
+
 function ProductPage({ setCartCount }) {
   const { slug } = useParams();
   const [product, setProduct] = useState(null);
@@ -391,6 +521,7 @@ export default function App() {
       <main>
         <Routes>
           <Route path="/" element={<CatalogPage cartCount={cartCount} setCartCount={setCartCount} />} />
+          <Route path="/concepts" element={<ConceptsPage />} />
           <Route path="/product/:slug" element={<ProductPage setCartCount={setCartCount} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
