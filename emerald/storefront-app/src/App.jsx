@@ -345,9 +345,11 @@ function ConceptsPage() {
     setEffectMessage(`Effect ran after the count changed to ${effectCount}.`);
   }, [effectCount]);
 
-  const hoistingMessage = getHoistedMessage();
-  function getHoistedMessage() {
-    return 'This message is returned by a function declaration called before its definition.';
+  const hoistingResult = readBeforeDeclaration();
+  function readBeforeDeclaration() {
+    const valueBeforeAssignment = hoistedValue;
+    var hoistedValue = 'assigned later';
+    return { valueBeforeAssignment, valueAfterAssignment: hoistedValue };
   }
 
   function runEventLoopExample() {
@@ -402,9 +404,12 @@ function ConceptsPage() {
 
         <article className="concept-card">
           <p className="concept-number">02 · JavaScript</p>
-          <h2>Hoisting</h2>
-          <p>{hoistingMessage}</p>
-          <pre><code>{'const message = getMessage();\nfunction getMessage() { return \"Ready\"; }'}</code></pre>
+          <h2>JavaScript Hoisting</h2>
+          <p>A function declaration can be called before it appears. The output also proves that <code>var</code> is hoisted as <code>undefined</code> until assignment; <code>let</code> and <code>const</code> cannot be read before initialization because of the temporal dead zone.</p>
+          <pre><code>{'const result = readBeforeDeclaration();\nfunction readBeforeDeclaration() { return \"Ready\"; }\n\nfunction example() {\n  console.log(value); // undefined\n  var value = \"assigned later\";\n}'}</code></pre>
+          <output className="concept-output">
+            Before <code>var</code> assignment: {String(hoistingResult.valueBeforeAssignment)}. After assignment: {hoistingResult.valueAfterAssignment}.
+          </output>
         </article>
 
         <article className="concept-card">
@@ -447,10 +452,24 @@ function ConceptsPage() {
           <h2>JOIN examples</h2>
           <p>These relational SQL examples are included as requested; they are illustrative and do not require a database connection.</p>
           <h3>INNER JOIN</h3>
-          <pre><code>{'SELECT users.name, orders.order_number\nFROM users\nINNER JOIN orders ON orders.user_id = users.id;'}</code></pre>
+          <pre><code>{'SELECT users.full_name, orders.order_number\nFROM users\nINNER JOIN orders ON orders.user_id = users.user_id;'}</code></pre>
           <h3>LEFT JOIN</h3>
-          <pre><code>{'SELECT users.name, orders.order_number\nFROM users\nLEFT JOIN orders ON orders.user_id = users.id;'}</code></pre>
+          <pre><code>{'SELECT users.full_name, orders.order_number\nFROM users\nLEFT JOIN orders ON orders.user_id = users.user_id;'}</code></pre>
           <p>Full examples: <code>emerald/sql/joins.sql</code></p>
+        </article>
+
+        <article className="concept-card concept-sql">
+          <p className="concept-number">08 · Relational database design</p>
+          <h2>Relational schema with PK and FK</h2>
+          <p>Primary keys uniquely identify rows. Foreign keys enforce the users → orders → order_items ← products relationships. The order item uses a composite primary key and preserves the price paid at checkout.</p>
+          <ul>
+            <li><code>users.user_id</code> is the primary key; <code>orders.user_id</code> references it.</li>
+            <li><code>orders.order_id</code> is the primary key; <code>order_items.order_id</code> references it.</li>
+            <li><code>products.product_id</code> is the primary key; <code>order_items.product_id</code> references it.</li>
+            <li><code>order_items</code> uses <code>(order_id, line_number)</code> as its composite primary key.</li>
+          </ul>
+          <pre><code>{'PRIMARY KEY (order_id, line_number),\nFOREIGN KEY (order_id) REFERENCES orders (order_id),\nFOREIGN KEY (product_id) REFERENCES products (product_id)'}</code></pre>
+          <p>Full PostgreSQL DDL: <code>emerald/sql/relational_schema.sql</code>. This reference schema is not connected to the MongoDB storefront.</p>
         </article>
       </div>
     </section>
